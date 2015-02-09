@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+    <head>
+     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <link rel="stylesheet" href="codebase/webix.css" type="text/css" media="screen" charset="utf-8">
+        <script src="codebase/webix.js" type="text/javascript" charset="utf-8"></script>
+        <style>
+
+            .blue.webix_menu-x{
+                background:#3498DB;
+            }
+        </style>
+        
+        <title>Управление дисковыми ресурсами</title>
+    </head>
+    <style type="text/css">
+        .mark{
+            width:100px;
+            text-align: center;
+            font-weight:bold;
+            float:right;
+            background-color:#777;
+            color:white;
+            border-radius:3px;
+        }
+        .info{
+            width:100px;
+            text-align: center;
+            font-weight:normal;
+            float:right;
+            background-color:#F99;
+            color:white;
+            border-radius:3px;
+        }
+    </style>
+    
+    <body>
+<script type="text/javascript" charset="utf-8">
+
+//верстка страницы интерфейса
+webix.ui({
+    rows:[
+        {view:"button", label:"new Palaver", width:100, on:{
+            onItemClick:function(){
+                createPalaver();
+            }
+            } },
+        {view:"button", label:"new Abonent", width:100, on:{
+            onItemClick:function(){
+                createAbonent();
+            }
+            }}
+    ]
+});
+
+//тестовая функция создания палавера
+function createPalaver() {
+    webix.ajax().post("palaver/description/1/2", {}, function(text, data) {
+        if (data.json().result == false) {
+            webix.alert(data.json().message);
+        } else {
+        	webix.alert(data.json().message);
+        }
+    });
+};
+
+//тестовая функция создания абонента
+var abonent = {
+		fName: "Иван",
+		mName: "Иванович",
+		lName: "Иванов",
+		description: "просто абонент",
+		address: "просто адрес"
+};
+
+function createAbonent() {
+	
+    webix.ajax().headers({"Content-type":"application/json"}).post("abonent", 
+    		JSON.stringify(abonent), 
+    		function(text, data) {
+        if (data.json().result == false) {
+            webix.alert("Error!");
+        } else {
+            webix.alert(data.json().message);
+        }
+    });
+};
+
+//окно загрузилось
+webix.attachEvent("onReady", function(){
+
+
+});
+
+function logout() {
+    webix.message("Выход")
+    window.location.assign("auth/signOut");
+}
+</script>
+    </body>
+</html>

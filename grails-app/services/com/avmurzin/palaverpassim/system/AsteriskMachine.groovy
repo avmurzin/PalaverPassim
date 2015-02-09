@@ -8,67 +8,74 @@ import com.avmurzin.palaverpassim.db.Phone;
 
 class AsteriskMachine implements CallMachine {
 
-	@Override
+	//This class is singleton
+	public static final AsteriskMachine INSTANCE = new AsteriskMachine();
+	public static AsteriskMachine getInstance() {
+		return INSTANCE;
+	}
+	private AsteriskMachine() {}
+	
+//	@Override
 	public boolean connectToConference(Abonent abonent, Conference conference) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	@Override
+//	@Override
 	public boolean disconnect(Abonent abonent, Conference conference) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	@Override
+//	@Override
 	public boolean muteFromAbonent(Abonent abonent, Conference conference) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	@Override
+//	@Override
 	public boolean muteToAbonent(Abonent abonent, Conference conference) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	@Override
+//	@Override
 	public boolean startRecord(Conference conference) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	@Override
+//	@Override
 	public boolean stopRecord(Conference conference) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	@Override
+//	@Override
 	public boolean isAbonentConnected(Abonent abonent, Conference conference) {
 		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
-	@Override
+//	@Override
 	public boolean isConferenceBusy(Conference conference) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	@Override
+//	@Override
 	public boolean isMutedToAbonent(Abonent abonent, Conference conference) {
 		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 
-	@Override
+//	@Override
 	public boolean isMutedFromAbonent(Abonent abonent, Conference conference) {
 		// TODO Auto-generated method stub
 		return false;
 	}
 
-	@Override
+//	@Override
 	public List<Phone> getAbonentConnectedPhone(Abonent abonent,
 			Conference conference) {
 		// TODO Auto-generated method stub

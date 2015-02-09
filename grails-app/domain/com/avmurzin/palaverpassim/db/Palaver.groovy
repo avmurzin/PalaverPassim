@@ -1,7 +1,12 @@
 package com.avmurzin.palaverpassim.db
 
 import java.util.UUID;
-
+/**
+ * Встреча (набор абонентов, привязанный к номеру конференции и запланированными
+ * временами начала и окончания).
+ * @author Andrei Murzin (http://avmurzin.com)
+ *
+ */
 class Palaver {
 	UUID uuid;
 	String description;
