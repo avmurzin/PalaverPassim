@@ -41,6 +41,22 @@ public interface CallMachine {
 	boolean muteToAbonent(Abonent abonent, Conference conference);
 	
 	/**
+	 * Включить поток от абонента (включить микрофон) в конференции. 
+	 * @param abonent
+	 * @param conference
+	 * @return
+	 */
+	boolean unmuteFromAbonent(Abonent abonent, Conference conference);
+	
+	/**
+	 * Включить поток к абоненту (включить абоненту звук) в конференции.
+	 * @param abonent
+	 * @param conference
+	 * @return
+	 */
+	boolean unmuteToAbonent(Abonent abonent, Conference conference);
+	
+	/**
 	 * начать запись конференции
 	 * @param conference
 	 * @return

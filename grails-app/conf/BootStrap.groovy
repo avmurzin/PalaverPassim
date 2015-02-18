@@ -74,7 +74,7 @@ class BootStrap {
 		//тестовый набор палаверов
 		Calendar calendar = new GregorianCalendar()
 		long nowTime = calendar.getTimeInMillis() / 1000
-		long hour = 60000
+		long hour = 3600
 
 		palaver = new Palaver(uuid: UUID.randomUUID(), description: "Говорилка №1",
 		startTimestamp: nowTime + hour*2, stopTimestamp: nowTime + hour*3)

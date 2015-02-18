@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html>
+    <head>
+     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <link rel="stylesheet" href="codebase/webix.css" type="text/css" media="screen" charset="utf-8">
+        <script src="codebase/webix.js" type="text/javascript" charset="utf-8"></script>
+        <style>
+
+            .blue.webix_menu-x{
+                background:#3498DB;
+            }
+        </style>
+        
+        <title>Управление телефонными конференциями</title>
+    </head>
+    <style type="text/css">
+        .mark{
+            vertical-align: middle;
+            width:60px;
+            text-align: center;
+            font-weight:bold;
+            float:right;
+            background-color:#FFF;
+            color:white;
+            border-radius:3px;
+        }
+        .info{
+            width:60px;
+            text-align: center;
+            font-weight:normal;
+            float:right;
+            background-color:#F99;
+            color:white;
+            border-radius:3px;
+        }
+        .space{
+            width:2px;
+            border: solid 1px black;
+            text-align: center;
+            font-weight:normal;
+            float:right;
+            background-color:#FFF;
+            color:white;
+            border-radius:3px;
+        }
+        .inbox{
+        vertical-align: middle;
+        display:inline-block;
+        }
+        .labeltext{
+            color: black; 
+            font-size: 200%; 
+            font-family: serif;
+        }
+        .disconnected{
+            width:60px;
+            text-align: center;
+            font-weight:normal;
+            float:right;
+            background-color:#F99;
+            color:white;
+            border-radius:3px;
+        }
+        .connected{
+            width:60px;
+            text-align: center;
+            font-weight:normal;
+            float:right;
+            background-color:#9F9;
+            color:white;
+            border-radius:3px;
+        }
+        .mutedto{
+            width:60px;
+            text-align: center;
+            font-weight:normal;
+            float:right;
+            background-color:#F99;
+            color:white;
+            border-radius:3px;
+        }
+        .unmutedto{
+            width:60px;
+            text-align: center;
+            font-weight:normal;
+            float:right;
+            background-color:#9F9;
+            color:white;
+            border-radius:3px;
+        }
+        .mutedfrom{
+            width:60px;
+            text-align: center;
+            font-weight:normal;
+            float:right;
+            background-color:#F99;
+            color:white;
+            border-radius:3px;
+        }
+        .unmutedfrom{
+            width:60px;
+            text-align: center;
+            font-weight:normal;
+            float:right;
+            background-color:#9F9;
+            color:white;
+            border-radius:3px;
+        }
+    </style>
+    
+    <body>
+<script type="text/javascript" charset="utf-8">
+
+//содержимое главного меню
+var menu_data = [
+    { id:"1",value:"Начать немедленно"}
+];
+
+//объект главного меню
+var menu = {
+    view:"menu",
+    id: "top_menu",
+    data: menu_data,
+    css:"blue",
+    type:{
+        subsign:true,
+
+    },
+    on:{
+        onMenuItemClick:function(id){
+            //menuSelect(id);
+        }
+        }
+};
+
+
+//тулбар справа от главного меню
+var toolbar = {
+        view:"toolbar", paddingY:0,  elements:[
+            {}, 
+            { view:"label", id:"logged_user", value: "", align: "right"},
+            { view:"button", label:"Выйти", width:100, on:{
+                onItemClick:function(){
+                    logout();
+                }
+                } }
+        ]
+    };
+ 
+//блок списка абонентов конференции
+var abonents_list = {
+        view: "list",
+        id: "abonents",
+        template: "<strong>#description#</strong> <div div class='space'>.</div><div class='#styleFrom#'><img src='images/#iconFrom#'></div><div div class='space'>.</div><div class='#styleTo#'><img src='images/#iconTo#'></div> <div div class='space'>.</div><div class='#styleAbonent#'><img src='images/#iconAbonent#'></div><div div class='space'>.</div>",
+        type:{
+            //height:40
+        },
+        select:false,
+        onClick:{
+            connected:function(e, id){
+                webix.message("connected");
+                //del_user(this.getItem(id).username, this.getItem(id).role);
+                return false;
+            },
+           disconnected:function(e, id){
+            webix.message("disconnected");
+            return false;
+        }
+        },
+        data:[],
+        on:{
+            onItemClick:function(id){
+            	//webix.message(this.getItem(id).uuid);
+            }
+           }
+}
+
+//заголовок конференции
+var palaver_title = { view:"label", id: "palaverTitle", label: "Label",  align:"center"}
+
+//форма приглашения дополнительного абонента
+var form_addabonent = {
+        view:"form", 
+        id:"form_addabonent",
+        width: "auto",
+        elements:[{view:"fieldset", label:"Пригласить в конференцию", body:{rows:[
+            { view:"text", name:"name", label:"Имя: "},
+            { view:"text", name:"phone", label:"Телефон: "},
+            { margin:5, view:"button", value:"Добавить", on : {
+                onItemClick:function(){
+                    add_abonent();
+                }
+                }}
+       ] }}]
+        }
+
+//верстка страницы интерфейса
+webix.ui({
+    rows:[
+        {type:"clean", cols: [menu,toolbar]},
+        palaver_title,
+        abonents_list,
+        form_addabonent
+        
+    ]
+});
+
+webix.attachEvent("onReady", function(){
+    webix.ajax("palaver/92061857-af9a-442d-a841-64f2e0625983", function(text, data) {
+        $$("abonents").clearAll();
+        $$("abonents").parse(data.json().items);
+        var title = "<span class='labeltext'>" + data.json().description + " </span>(Комната: " + data.json().conference + ")";
+        $$("palaverTitle").setValue(title);
+        $$("form_addabonent").disable();
+    });
+
+     
+});
+
+function logout() {
+    webix.message("Выход")
+    window.location.assign("auth/signOut");
+}
+</script>
+    </body>
+</html>

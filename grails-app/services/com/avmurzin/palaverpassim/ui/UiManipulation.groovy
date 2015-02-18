@@ -18,7 +18,7 @@ class UiManipulation {
 	private UiManipulation() {}
 
 	private final CallMachine callMachine = AsteriskMachine.getInstance();
-	
+
 	/**
 	 * Запуск palaver (т.е. вызов всех абонентов) с указанным uuid.
 	 * В т.ч. повторный запуск (при добавлении абонента на ходу) с проверкой
@@ -28,7 +28,7 @@ class UiManipulation {
 	 * @return
 	 */
 	public ReturnMessage startPalaver(UUID uuid, Mode mode) {
-		
+
 		Palaver palaver = Palaver.findByUuid(uuid);
 		Conference conference = palaver.conference;
 		ReturnMessage returnMessage = new ReturnMessage();
@@ -36,7 +36,7 @@ class UiManipulation {
 		//TODO: проверить занятость расписания на ближайшее будущее и ограничить
 		// время проведения palaver. Возможно правильно создать копию палавера
 		//с новыми временами начала и окончания (да, так и надо!).
-		
+
 		if(mode == Mode.MANUAL) {
 			//проверить занятость конференции
 			if (callMachine.isConferenceBusy(conference)) {
@@ -55,7 +55,7 @@ class UiManipulation {
 		}
 		return returnMessage;
 	}
-	
+
 	/**
 	 * Останов palaver (отключение всех абонентов).
 	 * @param uuid
@@ -65,19 +65,51 @@ class UiManipulation {
 		Palaver palaver = Palaver.findByUuid(uuid);
 		Conference conference = palaver.conference;
 		ReturnMessage returnMessage = new ReturnMessage();
-		
+
 		for (Abonent abonent: palaver.abonent.findAll()) {
 			//проверка подключенности абонента
 			if (callMachine.isAbonentConnected(abonent, conference)) {
 				callMachine.disconnect(abonent, conference);
 			}
 		}
-		
+
 		returnMessage.result = true;
-		returnMessage.message = "Конферецния прекращена";
+		returnMessage.message = "Конференция прекращена";
 		return returnMessage;
 	}
-	
+
+	/**
+	 * Управление звуком абонента.
+	 * @param uuid
+	 * @param palaveruuid
+	 * @param todo  = [muteto, unmuteto, mutefrom, unmutefrom]
+	 * @return
+	 */
+	public ReturnMessage setAbonentAudio(UUID uuid, UUID palaveruuid, String todo) {
+		Palaver palaver = Palaver.findByUuid(palaveruuid);
+		Abonent abonent = Abonent.findByUuid(uuid);
+		Conference conference = palaver.conference;
+		ReturnMessage returnMessage = new ReturnMessage();
+		if(todo.equals("muteto")) {
+			returnMessage.result = callMachine.muteToAbonent(abonent, conference)
+		}
+		if(todo.equals("mutefrom")) {
+			returnMessage.result = callMachine.muteFromAbonent(abonent, conference)
+		}
+		if(todo.equals("unmuteto")) {
+			returnMessage.result = callMachine.unmuteToAbonent(abonent, conference)
+		}
+		if(todo.equals("unmutefrom")) {
+			returnMessage.result = callMachine.unmuteFromAbonent(abonent, conference)
+		}
+
+		if (returnMessage.result) {
+			returnMessage.message = "Выполнение операции не удалось";
+		} else {
+			returnMessage.message = "Операция выполнена успешно";
+		}
+	}
+
 	/**
 	 * Проверка состояния встречи (находится ли в активном состоянии).
 	 * @return

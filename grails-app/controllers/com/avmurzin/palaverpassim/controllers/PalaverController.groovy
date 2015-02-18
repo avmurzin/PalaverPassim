@@ -12,6 +12,7 @@ import com.avmurzin.palaverpassim.system.CallMachine
 import com.avmurzin.palaverpassim.ui.UiManipulation
 import com.avmurzin.palaverpassim.system.AsteriskMachine
 
+import java.text.SimpleDateFormat
 import java.util.UUID;
 
 class PalaverController {
@@ -21,10 +22,10 @@ class PalaverController {
 
 	def index() {
 		redirect(url: "/index.html")
-//		render(contentType: "application/json") {
-//			result = false
-//			message = "Несуществующая операция"
-//		}
+	}
+	
+	def nks() {
+		redirect(url: "/nks.html")
 	}
 
 	def getTimezone() {
@@ -33,14 +34,14 @@ class PalaverController {
 			timezone = "${config.timezone.shift / 3600}"
 		}
 	}
-	
+
 	def createAbonent() {
 		def jsonObject = request.JSON
 		UUID uuid = UUID.randomUUID()
 		def abonent = new Abonent(jsonObject)
 		abonent.uuid = uuid
 		abonent.save(failOnError: true, flush: true)
-		
+
 		render(contentType: "application/json") {
 			result = true
 			message = uuid.toString()
@@ -54,9 +55,19 @@ class PalaverController {
 	 * @return
 	 */
 	def createPalaver() {
+		long startTimestamp
+		long stopTimestamp
 		String description = params.description
-		long startTimestamp = params.startTimestamp
-		long stopTimestamp = params.stopTimestamp
+		
+		try {
+			startTimestamp = (long) Long.parseLong(params.startTimestamp)
+			stopTimestamp = (long) Long.parseLong(params.stopTimestamp)
+		} catch (Exception e) {
+		render(contentType: "application/json") {
+			result = false
+			message = "Неверные параметры"
+		}
+		}
 
 		UUID uuid = UUID.randomUUID()
 
@@ -121,8 +132,8 @@ class PalaverController {
 		Palaver palaver = Palaver.findByUuid(puuid);
 		Conference pconference = palaver.conference;
 		def abonents = palaver.abonent.findAll();
-		
-	
+
+
 		render(contentType: "application/json") {
 			uuid = puuid.toString()
 			description = palaver.description
@@ -145,11 +156,92 @@ class PalaverController {
 					} else {
 						audioToStatus = AudioStatus.UNMUTED
 					}
-					item uuid: abonent.uuid.toString(), description: "${abonent.fName} ${abonent.mName} ${abonent.lName} ${abonent.description}",
-					status: abonentStatus.toString(), audioToStatus: audioToStatus.toString(), audioFromStatus: audioFromStatus.toString()
+					item uuid: abonent.uuid.toString(), description: "${abonent.fName} ${abonent.mName} ${abonent.lName}, ${abonent.description}",
+					status: abonentStatus.toString(), iconAbonent: abonentStatus.getIconName(), styleAbonent: abonentStatus.getStyleName(),
+					audioToStatus: audioToStatus.toString(), iconTo: audioToStatus.getIconNameTo(), styleTo: audioToStatus.getStyleNameTo(),
+					audioFromStatus: audioFromStatus.toString(), iconFrom: audioFromStatus.getIconNameFrom(), styleFrom: audioFromStatus.getStyleNameFrom() 
 				}
 			}
 		}
+	}
+
+	/**
+	 * Получить список всех палаверов (в виде дерева) в заданный период времени.
+	 * ?startTimestamp=&stopTimestamp=
+	 * По умолчанию от момента запуска и двое суток вперед.
+	 * -Доступ: ${palaverUuid}:WEBUSER
+	 * @return
+	 */
+	def getPalaverTimeline() {
+		long startTimestamp
+		long stopTimestamp
+		Calendar calendar = new GregorianCalendar()
+		SimpleDateFormat formattedDate = new SimpleDateFormat("dd.MM HH:MM")
+
+		def tree = []
+		def data = []
+
+		try {
+			startTimestamp = (long) Long.parseLong(params.startTimestamp)
+			stopTimestamp = (long) Long.parseLong(params.stopTimestamp)
+		} catch (Exception e) {
+			calendar.set(Calendar.HOUR_OF_DAY, 0)
+			calendar.set(Calendar.MINUTE, 0)
+			calendar.set(Calendar.SECOND, 0)
+			startTimestamp = calendar.getTimeInMillis() / 1000
+			stopTimestamp = startTimestamp + 2*24*60*60
+		}
+		
+		def conferences = Conference.findAll()
+
+		for (Conference conference : conferences) {
+			
+			for (Palaver palaver : conference.palaver.findAll { (it.startTimestamp >= startTimestamp) && (it.stopTimestamp <= stopTimestamp)}) {
+				calendar.setTimeInMillis(palaver.startTimestamp * 1000)
+				String timeFrom = formattedDate.format(calendar.getTime())
+				calendar.setTimeInMillis(palaver.stopTimestamp * 1000)
+				String timeTo = formattedDate.format(calendar.getTime())
+				
+				data << [value : "${palaver.description} (${timeFrom} - ${timeTo})"]
+			}
+			tree << [value: conference.description, data: data]
+			data = []
+		}
+
+		render(contentType: "application/json") {
+			tree
+		}
+	}
+
+	/**
+	 * Получить список всех конференц-комнат.
+	 * @return
+	 */
+	def getConference() {
+		def out = []
+		def conferences = Conference.findAll().each { out << [id: it.uuid.toString(), value: it.description] }
+		render(contentType: "application/json") {
+			out
+		}
+	}
+	
+	/**
+	 * Управление звуком абонента.
+	 * $todo = [muteto, unmuteto, mutefrom, unmutefrom]
+	 * @return
+	 */
+	def setAbonentAudio() {
+		String todo = params.todo
+		UUID uuid = UUID.fromString(params.uuid);
+		UUID palaveruuid = UUID.fromString(params.palaveruuid);
+
+		ReturnMessage returnMessage = uiManipulation.setAbonentAudio(uuid, palaveruuid, todo);
+
+		render(contentType: "application/json") {
+			result = returnMessage.result
+			message = returnMessage.message
+		}
+
 	}
 	
 	//TODO: удалить
@@ -157,9 +249,21 @@ class PalaverController {
 		def palavers = Palaver.findAll()
 		def palaverUuid = []
 		palavers.each { palaverUuid << it.uuid.toString()}
-		
+
 		render(contentType: "application/json") {
 			palaverUuid
+		}
+
+	}
+	
+	//TODO: удалить.
+	def asterisk() {
+		AsteriskMachine asterisk = AsteriskMachine.getInstance();
+		//asterisk.test();
+		
+			render(contentType: "application/json") {
+			result = true
+			message = "OK"
 		}
 		
 	}

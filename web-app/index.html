@@ -11,7 +11,7 @@
             }
         </style>
         
-        <title>Управление дисковыми ресурсами</title>
+        <title>Управление телефонными конференциями</title>
     </head>
     <style type="text/css">
         .mark{
@@ -37,32 +37,130 @@
     <body>
 <script type="text/javascript" charset="utf-8">
 
+//содержимое главного меню
+var menu_data = [
+    { id:"1",value:"Конференция", submenu:[
+        {id: "1.1", value: "Создать"}, 
+        {id: "1.2", value: "Изменить"},
+        {id: "1.3", value: "Удалить"}
+    ]}
+];
+
+
+//объект главного меню
+var menu = {
+    view:"menu",
+    id: "top_menu",
+    data: menu_data,
+    css:"blue",
+    type:{
+        subsign:true,
+
+    },
+    on:{
+        onMenuItemClick:function(id){
+            //menuSelect(id);
+        }
+        }
+};
+
+
+//тулбар справа от главного меню
+var toolbar = {
+        view:"toolbar", paddingY:0,  elements:[
+            {}, 
+            { view:"label", id:"logged_user", value: "", align: "right"},
+            { view:"button", label:"Выйти", width:100, on:{
+                onItemClick:function(){
+                    logout();
+                }
+                } }
+        ]
+    };
+    
+//дерево контейнеров (правый блок)
+var container_tree = {
+    view : "tree",
+    id : "container_tree",
+    select : true,
+    type:"lineTree",
+    template:"{common.icon()} <img src='images/#image#.gif' style='float:left; margin:3px 4px 0px 1px;'> <span>#value#</span>",
+    data : [{id: "123", value: "Требуется залогиниться", image: "VIRTUAL"}],
+    on:{
+        onItemClick:function(id){
+            //container_properties(id);
+        }
+       }
+};    
+
+//форма создания палавера
+var create_palaver = {
+		view:"form", id: "palaver_form", scroll:false, elements:[
+                                      { view:"text", label:"Описание", name:"description", value:"Новая встреча", width:300},
+                                      {view:"select", id:"conference_select", name:"conference" ,label:"Комната", options:"conference", labelAlign: 'left'},
+		                              { view:"datepicker", timepicker:true, label:"Начало", name:"start", stringResult:false, format:"%d.%m.%Y %H:%i", on:{
+		                            	  onChange:function(){
+		                            		  //var name = this.getParentView().getValues().start;
+		                            		  //this.getParentView().setValues({ end: name }, true); 
+		                            		  update_form();
+		                                  }
+		                                  }  },
+		                              { view:"datepicker", timepicker:true, label:"Конец", name:"end", stringResult:false, format:"%d.%m.%Y %H:%i", on:{
+                                          onChange:function(){
+                                              update_form();
+                                          }
+                                          }  },
+                                      { view:"button", type:"form", value:"Создать", click:function(){
+                                    	  createPalaver();
+		                                     }}
+		                                 ]
+		
+}
+
+function update_form() {
+	var start = $$('palaver_form').getValues().start;
+	var startTimestamp = start.getTime() / 1000;
+	var end = $$('palaver_form').getValues().end;
+	var stopTimestamp = startTimestamp + 86400;
+	if (end != null) {
+		stopTimestamp = end.getTime() / 1000;
+	}
+	
+    $$("container_tree").clearAll();
+    webix.ajax("palaver/timeline?startTimestamp=" + startTimestamp + "&stopTimestamp=" + stopTimestamp, function(text, data) {
+        $$("container_tree").parse(data.json());
+        $$("container_tree").openAll();
+        $$("container_tree").refresh();
+
+    });
+}
+
 //верстка страницы интерфейса
 webix.ui({
     rows:[
-        {view:"button", label:"new Palaver", width:100, on:{
-            onItemClick:function(){
-                createPalaver();
-            }
-            } },
-        {view:"button", label:"new Abonent", width:100, on:{
-            onItemClick:function(){
-                createAbonent();
-            }
-            }}
+        {type:"clean", cols: [menu,toolbar]},
+        { cols: [{rows: [{view: "label", label:"<span class='webix_property_label_line'>Создать новую встречу</span>"}, 
+                         create_palaver, {}]}, 
+                 {view:"resizer"}, 
+                 {rows: [{view: "label", label:"<span class='webix_property_label_line'>Ранее запланированные на тот же период встречи</span>"}, container_tree]}]}
     ]
 });
 
-//тестовая функция создания палавера
+//создание палавера
 function createPalaver() {
-    webix.ajax().post("palaver/description/1/2", {}, function(text, data) {
+	var startTimestamp = $$('palaver_form').getValues().start.getTime() / 1000;
+	var stopTimestamp = $$('palaver_form').getValues().end.getTime() / 1000;
+	var description = $$('palaver_form').getValues().description;
+	
+    webix.ajax().post("palaver/" + description + "/" + startTimestamp + "/" + stopTimestamp, {}, function(text, data) {
         if (data.json().result == false) {
             webix.alert(data.json().message);
         } else {
-        	webix.alert(data.json().message);
+        	update_tree();
         }
     });
 };
+
 
 //тестовая функция создания абонента
 var abonent = {
@@ -86,10 +184,21 @@ function createAbonent() {
     });
 };
 
+function update_tree() {
+    $$("container_tree").clearAll();
+    webix.ajax("palaver/timeline", function(text, data) {
+    	
+        $$("container_tree").parse(data.json());
+        $$("container_tree").openAll();
+        $$("container_tree").refresh();
+
+    });
+}
+
 //окно загрузилось
 webix.attachEvent("onReady", function(){
-
-
+	update_tree();
+	 
 });
 
 function logout() {
