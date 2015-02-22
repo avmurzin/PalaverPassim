@@ -2,7 +2,8 @@ package com.avmurzin.palaverpassim.global;
 
 public enum AudioStatus {
 	MUTED("to_sound_off.png", "mutedto", "mic_off.png", "mutedfrom"),
-	UNMUTED("to_sound_on.png", "unmutedto", "mic_on.png", "unmutedfrom");
+	UNMUTED("to_sound_on.png", "unmutedto", "mic_on.png", "unmutedfrom"),
+	INPROCESS("spinner.gif", "spinner", "spinner.gif", "spinner");;
 	
 	private String iconNameTo;
 	private String styleNameTo;

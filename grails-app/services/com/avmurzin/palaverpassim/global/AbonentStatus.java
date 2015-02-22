@@ -3,7 +3,8 @@ package com.avmurzin.palaverpassim.global;
 public enum AbonentStatus {
 	BUSY ("", ""),
 	DISCONNECTED ("phone_off.png", "disconnected"),
-	CONNECTED("phone_on.png", "connected");
+	CONNECTED("phone_on.png", "connected"),
+	INPROCESS("spinner.gif", "spinner");
 
 	private String iconName;
 	private String styleName;

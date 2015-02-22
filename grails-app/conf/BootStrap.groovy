@@ -18,6 +18,7 @@ class BootStrap {
 		user.addToPermissions("palaver:*:*")
 		user.save()
 
+		//очистка таблиц абонентов, групп, комнат, палаверов
 		Abonent abonent
 		Abonent.findAll().each {it.delete()}
 
@@ -35,14 +36,27 @@ class BootStrap {
 			[fName: "Константин", mName: "Константинович", lName: "Константинов", description: "инопланетянин", address: "Антарес"],
 			[fName: "Лавр", mName: "Федотович", lName: "Вунюков", description: "председатель", address: "Китежград"],
 			[fName: "Рудольф", mName: "Архипович", lName: "Хлебовводов", description: "активист", address: "Тьмускорпионь"],
-			[fName: "Амвросий", mName: "Амбруазович", lName: "Выбегалло", description: "профессор", address: "ННИЧАВО"],
+			[fName: "Амвросий", mName: "Амбруазович", lName: "Выбегалло", description: "профессор", address: "НИИЧАВО"],
 			[fName: "Клоп", mName: '-', lName: "Говорун", description: "клоп", address: "спичечный коробок"]]
 		abonentData.each { data ->
 			data << [uuid: UUID.randomUUID()]
 			abonent = new Abonent(data)
 			abonent.save(failOnError: true, flush: true)
+			
+			def ph = "${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}"
+			if(abonent.lName.equals("Вунюков")) {
+				ph = "9513559"
+			}
+			if(abonent.lName.equals("Хлебовводов")) {
+				ph = "989086467383"
+			}
+			if(abonent.lName.equals("Выбегалло")) {
+				ph = "989501256358"
+			}
+
 			def phone = new Phone(uuid: UUID.randomUUID(),
-			phoneNumber: "${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}",
+			//phoneNumber: "${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}",
+			phoneNumber: "${ph}",
 			description: "рабочий")
 			phone.abonent = abonent
 			phone.save(failOnError: true, flush: true)
@@ -60,15 +74,18 @@ class BootStrap {
 
 		//тестовый набор конференций
 		conference = new Conference(uuid: UUID.randomUUID(), description: "One",
-		phoneNumber: "${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}")
+		//phoneNumber: "${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}")
+		phoneNumber: "2900")
 		conference.save(failOnError: true, flush: true)
 
 		conference = new Conference(uuid: UUID.randomUUID(), description: "Two",
-		phoneNumber: "${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}")
+		//phoneNumber: "${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}")
+		phoneNumber: "2910")
 		conference.save(failOnError: true, flush: true)
 
 		conference = new Conference(uuid: UUID.randomUUID(), description: "Three",
-		phoneNumber: "${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}")
+		//phoneNumber: "${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}")
+		phoneNumber: "2911")
 		conference.save(failOnError: true, flush: true)
 
 		//тестовый набор палаверов

@@ -259,7 +259,7 @@ class PalaverController {
 	//TODO: удалить.
 	def asterisk() {
 		AsteriskMachine asterisk = AsteriskMachine.getInstance();
-		//asterisk.test();
+		asterisk.test();
 		
 			render(contentType: "application/json") {
 			result = true
