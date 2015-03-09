@@ -11,6 +11,7 @@ class Abonent {
 	String lName;
 	String description;
 	String address;
+	String email;
 
 	static mapping = {
 		table "abonent";
@@ -20,10 +21,12 @@ class Abonent {
 		mName column: "mName", length: 50, defaultValue: 'Отчество';
 		lName column: "lName", length: 50, defaultValue: 'Фамилия';
 		address column: "address", length: 400, defaultValue: 'адрес';
+		email column: "email";
 	}
 	
 	static hasMany = [phones:Phone]
 	
 	static constraints = {
+		email email: true, blank: true
 	}
 }

@@ -6,6 +6,7 @@ import com.avmurzin.palaverpassim.db.Group
 import com.avmurzin.palaverpassim.db.Palaver
 import com.avmurzin.palaverpassim.db.Phone
 import com.avmurzin.palaverpassim.sec.User
+import com.avmurzin.palaverpassim.global.PalaverType
 
 import org.apache.shiro.crypto.hash.Sha256Hash
 
@@ -32,12 +33,12 @@ class BootStrap {
 		Palaver.findAll().each {it.delete()}
 
 		//тестовый набор абонентов
-		def abonentData = [[fName: "Лазарь", mName: "Борисович", lName: "Пушистиков", description: "директор", address: "Москва"],
-			[fName: "Константин", mName: "Константинович", lName: "Константинов", description: "инопланетянин", address: "Антарес"],
-			[fName: "Лавр", mName: "Федотович", lName: "Вунюков", description: "председатель", address: "Китежград"],
-			[fName: "Рудольф", mName: "Архипович", lName: "Хлебовводов", description: "активист", address: "Тьмускорпионь"],
-			[fName: "Амвросий", mName: "Амбруазович", lName: "Выбегалло", description: "профессор", address: "НИИЧАВО"],
-			[fName: "Клоп", mName: '-', lName: "Говорун", description: "клоп", address: "спичечный коробок"]]
+		def abonentData = [[fName: "Лазарь", mName: "Борисович", lName: "Пушистиков", description: "директор", address: "Москва", email: "avmurzin@gmail.com"],
+			[fName: "Константин", mName: "Константинович", lName: "Константинов", description: "инопланетянин", address: "Антарес", email: "avmurzin@gmail.com"],
+			[fName: "Лавр", mName: "Федотович", lName: "Вунюков", description: "председатель", address: "Китежград", email: "avmurzin@gmail.com"],
+			[fName: "Рудольф", mName: "Архипович", lName: "Хлебовводов", description: "активист", address: "Тьмускорпионь", email: "avmurzin@gmail.com"],
+			[fName: "Амвросий", mName: "Амбруазович", lName: "Выбегалло", description: "профессор", address: "НИИЧАВО", email: "avmurzin@gmail.com"],
+			[fName: "Клоп", mName: '-', lName: "Говорун", description: "клоп", address: "спичечный коробок", email: "avmurzin@gmail.com"]]
 		abonentData.each { data ->
 			data << [uuid: UUID.randomUUID()]
 			abonent = new Abonent(data)
@@ -51,7 +52,7 @@ class BootStrap {
 				ph = "989086467383"
 			}
 			if(abonent.lName.equals("Выбегалло")) {
-				ph = "989501256358"
+				ph = "1300"
 			}
 
 			def phone = new Phone(uuid: UUID.randomUUID(),
@@ -92,9 +93,10 @@ class BootStrap {
 		Calendar calendar = new GregorianCalendar()
 		long nowTime = calendar.getTimeInMillis() / 1000
 		long hour = 3600
-
-		palaver = new Palaver(uuid: UUID.randomUUID(), description: "Говорилка №1",
-		startTimestamp: nowTime + hour*2, stopTimestamp: nowTime + hour*3)
+		
+		//palaver = new Palaver(uuid: UUID.randomUUID(), description: "Говорилка №1",
+		palaver = new Palaver(uuid: UUID.fromString("ca4356df-4a2b-4df2-8a5f-dfc8b0294576"), description: "Говорилка №1",
+		startTimestamp: nowTime + hour*2, stopTimestamp: nowTime + hour*3, palaverType: PalaverType.PREPARED.toString())
 		palaver.conference = Conference.find("from Conference as c where c.description=:desc",
 				[desc: "One"])
 		palaver.abonent = Abonent.findAll("from Abonent as a where a.lName in (:names)",
@@ -102,7 +104,7 @@ class BootStrap {
 		palaver.save(failOnError: true, flush: true)
 
 		palaver = new Palaver(uuid: UUID.randomUUID(), description: "Говорилка №2",
-		startTimestamp: nowTime + hour*2, stopTimestamp: nowTime + hour*3)
+		startTimestamp: nowTime + hour*2, stopTimestamp: nowTime + hour*3, palaverType: PalaverType.PREPARED.toString())
 		palaver.conference = Conference.find("from Conference as c where c.description=:desc",
 				[desc: "Two"])
 		palaver.abonent = Abonent.findAll("from Abonent as a where a.lName in (:names)",
@@ -110,7 +112,7 @@ class BootStrap {
 		palaver.save(failOnError: true, flush: true)
 
 		palaver = new Palaver(uuid: UUID.randomUUID(), description: "Говорилка №3",
-		startTimestamp: nowTime + hour*6, stopTimestamp: nowTime + hour*7)
+		startTimestamp: nowTime + hour*6, stopTimestamp: nowTime + hour*7, palaverType: PalaverType.TEMPLATE.toString())
 		palaver.conference = Conference.find("from Conference as c where c.description=:desc",
 				[desc: "Two"])
 		palaver.abonent = Abonent.findAll("from Abonent as a where a.lName in (:names)",

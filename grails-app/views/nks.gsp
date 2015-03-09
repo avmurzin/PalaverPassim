@@ -3,7 +3,8 @@
     <head>
      <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
         <link rel="stylesheet" href="codebase/webix.css" type="text/css" media="screen" charset="utf-8">
-        <script src="codebase/webix.js" type="text/javascript" charset="utf-8"></script>
+
+        <g:javascript src="codebase/webix.js" />
         <style>
 
             .blue.webix_menu-x{
@@ -118,8 +119,8 @@
     </style>
     
     <body>
-<script type="text/javascript" charset="utf-8">
 
+<g:javascript>
 //содержимое главного меню
 var menu_data = [
     { id:"1",value:"Управление конференцией", submenu:[
@@ -254,7 +255,8 @@ function menuSelect(id) {
 }
 };
 
-var palaverUuid = "ca4356df-4a2b-4df2-8a5f-dfc8b0294576";
+//var palaverUuid = "ca4356df-4a2b-4df2-8a5f-dfc8b0294576";
+var palaverUuid = "${uuid}";
 
 function start_palaver() {
     webix.ajax().post("palaver/" + palaverUuid + "/start", {}, function(text, data) {
@@ -340,6 +342,6 @@ function logout() {
     webix.message("Выход")
     window.location.assign("auth/signOut");
 }
-</script>
+</g:javascript>
     </body>
 </html>

@@ -9,7 +9,7 @@
 dataSource {
 	pooled = true
 	dbCreate = "update"
-	url = "jdbc:mysql://localhost/palaverpassim?useUnicode=true&characterEncoding=UTF-8"
+	url = "jdbc:mysql://localhost/palaverpassim?useUnicode=true&characterEncoding=UTF-8&generateSimpleParameterMetadata=true"
 	//also use
 	// CREATE DATABASE palaverpassim CHARACTER SET utf8 COLLATE utf8_general_ci;
 	// at mysql console
@@ -87,7 +87,7 @@ environments {
 //            }
 			pooled = true
 			dbCreate = "update"
-			url = "jdbc:mysql://localhost/palaverpassim?useUnicode=true&characterEncoding=UTF-8"
+			url = "jdbc:mysql://localhost/palaverpassim?useUnicode=true&characterEncoding=UTF-8&generateSimpleParameterMetadata=true"
 			//also use
 			// CREATE DATABASE palaverpassim CHARACTER SET utf8 COLLATE utf8_general_ci;
 			// at mysql console

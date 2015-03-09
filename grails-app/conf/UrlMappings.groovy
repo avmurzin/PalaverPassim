@@ -42,6 +42,20 @@ class UrlMappings {
 		//$todo = [muteto, unmuteto, mutefrom, unmutefrom]
 		"/abonent/$uuid/$todo/$palaveruuid"(controller: "palaver", action: "setAbonentAudio", method: "POST")
 		
+		//отключить абонента от палавера
+		"/palaver/$palaveruuid/abonent/$uuid/kick"(controller: "palaver", action: "kickAbonentFromPalaver", method: "GET")
+		
+		//подключить абонента к палаверу
+		"/palaver/$palaveruuid/abonent/$uuid/connect"(controller: "palaver", action: "connectAbonentToPalaver", method: "GET")
+		
+		//получить дерево шаблонов палаверов
+		//возвращает JSON-дерево для формирования интерфейса выбора шаблона палавера.
+		"/interface/template"(controller: "palaver", action: "getPalaverTemplates", method: "GET")
+		
+		//редирект на указанные страницы с параметром uuid
+		//?page=&uuid=
+		"/redirect"(controller: "palaver", action: "getPage", method: "GET")
+		
 		//TODO: удалить. Получить все uuid палаверов
 		"/palaver/uuid"(controller: "palaver", action: "getAllPalaverUuid", method: "GET")
 		

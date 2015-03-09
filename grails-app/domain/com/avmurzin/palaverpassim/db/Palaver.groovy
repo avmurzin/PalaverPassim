@@ -1,5 +1,6 @@
 package com.avmurzin.palaverpassim.db
 
+import com.avmurzin.palaverpassim.global.PalaverType
 import java.util.UUID;
 /**
  * Встреча (набор абонентов, привязанный к номеру конференции и запланированными
@@ -12,6 +13,7 @@ class Palaver {
 	String description;
 	long startTimestamp; //время начала встречи
 	long stopTimestamp;  //время завершения встречи
+	String palaverType; //тип палавера (обычный, шаблон, готовый для запуска)
 	
 	static mapping = {
 		table "palaver";

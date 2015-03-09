@@ -5,6 +5,8 @@ import com.avmurzin.palaverpassim.db.Conference
 import com.avmurzin.palaverpassim.db.Palaver
 import com.avmurzin.palaverpassim.global.ReturnMessage
 import com.avmurzin.palaverpassim.global.Mode
+import com.avmurzin.palaverpassim.global.AbonentStatus;
+import com.avmurzin.palaverpassim.global.AudioStatus;
 import com.avmurzin.palaverpassim.system.CallMachine
 import com.avmurzin.palaverpassim.system.AsteriskMachine
 
@@ -38,6 +40,8 @@ class UiManipulation {
 		//с новыми временами начала и окончания (да, так и надо!).
 
 		if(mode == Mode.MANUAL) {
+			//в ручном режиме сделать копию палавера, запустить копию
+			palaver = Palaver.findByUuid(copyPalaver(uuid));
 			//проверить занятость конференции
 			if (callMachine.isConferenceBusy(conference)) {
 				returnMessage.result = false;
@@ -45,12 +49,12 @@ class UiManipulation {
 			} else {
 				for (Abonent abonent: palaver.abonent.findAll()) {
 					//проверка подключенности абонента
-					if (!callMachine.isAbonentConnected(abonent, conference)) {
-						callMachine.connectToConference(abonent, conference);
+					if (!callMachine.getAbonentStatus(abonent, palaver).equals(AbonentStatus.CONNECTED)) {
+						callMachine.connectToConference(abonent, palaver);
 					}
 				}
 				returnMessage.result = true;
-				returnMessage.message = "Ожидайте ответа абонентов"
+				returnMessage.message = palaver.uuid.toString(); //"Ожидайте ответа абонентов"
 			}
 		}
 		return returnMessage;
@@ -61,16 +65,13 @@ class UiManipulation {
 	 * @param uuid
 	 * @return
 	 */
-	public ReturnMessage stopPalaver(UUID uuid) {
+	public ReturnMessage stopPalaver(UUID uuid, Mode mode) {
 		Palaver palaver = Palaver.findByUuid(uuid);
 		Conference conference = palaver.conference;
 		ReturnMessage returnMessage = new ReturnMessage();
 
 		for (Abonent abonent: palaver.abonent.findAll()) {
-			//проверка подключенности абонента
-			if (callMachine.isAbonentConnected(abonent, conference)) {
-				callMachine.disconnect(abonent, conference);
-			}
+				callMachine.disconnect(abonent, palaver);
 		}
 
 		returnMessage.result = true;
@@ -91,16 +92,16 @@ class UiManipulation {
 		Conference conference = palaver.conference;
 		ReturnMessage returnMessage = new ReturnMessage();
 		if(todo.equals("muteto")) {
-			returnMessage.result = callMachine.muteToAbonent(abonent, conference)
+			returnMessage.result = callMachine.setAudioToAbonent(abonent, palaver, AudioStatus.MUTED)
 		}
 		if(todo.equals("mutefrom")) {
-			returnMessage.result = callMachine.muteFromAbonent(abonent, conference)
+			returnMessage.result = callMachine.setAudioFromAbonent(abonent, palaver, AudioStatus.MUTED)
 		}
 		if(todo.equals("unmuteto")) {
-			returnMessage.result = callMachine.unmuteToAbonent(abonent, conference)
+			returnMessage.result = callMachine.setAudioToAbonent(abonent, palaver, AudioStatus.UNMUTED)
 		}
 		if(todo.equals("unmutefrom")) {
-			returnMessage.result = callMachine.unmuteFromAbonent(abonent, conference)
+			returnMessage.result = callMachine.setAudioFromAbonent(abonent, palaver, AudioStatus.UNMUTED)
 		}
 
 		if (returnMessage.result) {
@@ -108,6 +109,8 @@ class UiManipulation {
 		} else {
 			returnMessage.message = "Операция выполнена успешно";
 		}
+		
+		return returnMessage;
 	}
 
 	/**
@@ -117,5 +120,22 @@ class UiManipulation {
 	public boolean isPalaverActive() {
 		//TODO: проверить попадает ли текущее время в период проведения встречи
 		//
+	}
+	
+	/**
+	 * Клонирование палавера.
+	 * @param uuid старого палавера.
+	 * @return uuid нового палавера.
+	 */
+	public UUID copyPalaver(UUID uuid) {
+		Palaver originalPalaver = Palaver.findByUuid(uuid);
+		def abonent = originalPalaver.abonent.findAll();
+		def conference = originalPalaver.conference;
+		Palaver copyPalaver = new Palaver(uuid: UUID.randomUUID(), 
+			description: "${originalPalaver.description} (клон)",
+			startTimestamp: originalPalaver.startTimestamp, stopTimestamp: originalPalaver.stopTimestamp,
+			abonent: abonent, conference: conference);
+		copyPalaver.save(failOnError: true, flush: true);
+		return copyPalaver.uuid;
 	}
 }

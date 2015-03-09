@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+    <head>
+     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <link rel="stylesheet" href="codebase/webix.css" type="text/css" media="screen" charset="utf-8">
+        <script src="codebase/webix.js" type="text/javascript" charset="utf-8"></script>
+        <style>
+            .blue.webix_menu-x{
+                background:#3498DB;
+            }
+        </style>
+        
+        <title>Управление телефонными конференциями</title>
+    </head>
+    <style type="text/css">
+        .mark{
+            width:100px;
+            text-align: center;
+            font-weight:bold;
+            float:right;
+            background-color:#777;
+            color:white;
+            border-radius:3px;
+        }
+        .info{
+            width:100px;
+            text-align: center;
+            font-weight:normal;
+            float:right;
+            background-color:#F99;
+            color:white;
+            border-radius:3px;
+        }
+        .label{
+            text-align: center;
+            font-size: 15pt;
+            font-weight:normal;
+            background-color:#A77;
+            color:white;
+            border-radius:3px;
+            margin: 10px;
+        }
+        .label2{
+            text-align: center;
+            font-size: 15pt;
+            font-weight:normal;
+            background-color:#F99;
+            color:white;
+            border-radius:3px;
+            margin: 10px;
+        }
+    </style>
+    
+    <body>
+<script type="text/javascript" charset="utf-8">
+
+//содержимое главного меню
+var menu_data = [
+    { id:"1",value:"Конференция", submenu:[
+        {id: "1.1", value: "Создать"}, 
+        {id: "1.2", value: "Изменить"},
+        {id: "1.3", value: "Удалить"}
+    ]}
+];
+
+
+//объект главного меню
+var menu = {
+    view:"menu",
+    id: "top_menu",
+    data: menu_data,
+    css:"blue",
+    type:{
+        subsign:true,
+
+    },
+    on:{
+        onMenuItemClick:function(id){
+            //menuSelect(id);
+        }
+        }
+};
+
+
+//тулбар справа от главного меню
+var toolbar = {
+        view:"toolbar", paddingY:0,  elements:[
+            {}, 
+            { view:"label", id:"logged_user", value: "", align: "right"},
+            { view:"button", label:"Выйти", width:100, on:{
+                onItemClick:function(){
+                    logout();
+                }
+                } }
+        ]
+    };
+    
+//дерево шаблонов (левый блок)
+var template_tree = {
+    view : "tree",
+    id : "template_tree",
+    select : true,
+    type:"lineTree",
+    //template:"{common.icon()} <img src='images/#image#.gif' style='float:left; margin:3px 4px 0px 1px;'> <span>#value#</span>",
+    data : [{id: "123", value: "Требуется залогиниться", image: "VIRTUAL"}],
+    on:{
+        onItemClick:function(id){
+            template_properties(id);
+        }
+       }
+};    
+
+var template_description_list = {
+        view: "list",
+        id: "template_description",
+        template: "<strong>#description#</strong>",
+       select:false,
+        data:[]
+} 
+
+var start_button = { view:"button", id:"next_button", label:"Перейти", type:"next", on:{
+    onItemClick:function(){
+        goToPalaver();
+    }
+    }}
+
+//верстка страницы интерфейса
+webix.ui({
+    rows:[
+        {type:"clean", cols: [menu,toolbar]},
+        { cols: [{rows: [{view: "label", label:"<span class='label'>Выбирайте подходящий шаблон конференции</span>"}, //<span class='webix_property_label_line'>Выбирайте подходящий шаблон конференции</span>
+                         template_tree]}, 
+                 {view:"resizer"}, 
+                 {rows: [{view: "label", id: "template_label", label:"<span class='label'>Свойства шаблона</span>"}, start_button, template_description_list, {}]}]}
+    ]
+});
+
+function template_properties(id) {
+    webix.ajax("palaver/" + id, function(text, data) {
+        //webix.message(text);
+        if(data.json().description == '') {
+        	$$("next_button").disable();
+        } else {
+        	$$("next_button").enable();
+        }
+        $$("template_label").setValue("<span class='label'>Свойства шаблона </span><span class='label'></span><span class='label2'> " + data.json().description + "</span>");
+        $$("template_description").clearAll();
+        $$("template_description").parse(data.json().items);
+        $$("template_description").sort('#description#', 'asc');
+    });
+	
+}
+
+function goToPalaver() {
+	var tree_id = $$("template_tree").getSelectedId();
+	//webix.message(tree_id);
+	window.location.href = "redirect?page=nks&uuid=" + tree_id;
+    //webix.ajax("redirect?page=nks&uuid=" + tree_id, function(text, data) {
+       
+    //});
+}
+
+function update_tree() {
+    $$("template_tree").clearAll();
+    webix.ajax("interface/template", function(text, data) {
+        $$("template_tree").parse(data.json());
+        $$("template_tree").openAll();
+        $$("template_tree").refresh();
+        $$("template_tree").sort('value', 'asc');
+        $$("next_button").disable();
+        
+    });
+}
+
+//окно загрузилось
+webix.attachEvent("onReady", function(){
+	update_tree();
+	 
+});
+
+function logout() {
+    webix.message("Выход")
+    window.location.assign("auth/signOut");
+}
+</script>
+    </body>
+</html>
