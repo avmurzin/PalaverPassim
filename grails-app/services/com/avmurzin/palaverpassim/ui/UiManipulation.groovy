@@ -134,6 +134,7 @@ class UiManipulation {
 		Palaver copyPalaver = new Palaver(uuid: UUID.randomUUID(), 
 			description: "${originalPalaver.description} (клон)",
 			startTimestamp: originalPalaver.startTimestamp, stopTimestamp: originalPalaver.stopTimestamp,
+			palaverType: originalPalaver.palaverType,
 			abonent: abonent, conference: conference);
 		copyPalaver.save(failOnError: true, flush: true);
 		return copyPalaver.uuid;

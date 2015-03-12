@@ -15,7 +15,10 @@ class UrlMappings {
 		"/timezone"(controller: "palaver", action: "getTimezone", method: "GET")
 		
 		//создать сессию (запланировать в расписании)
-		"/palaver/$description/$startTimestamp/$startTimestamp"(controller: "palaver", action: "createPalaver", method: "POST")
+		//передается JSON объект, соотв. доменному классу Palaver
+		//и параметр uuid - номер комнаты
+		"/palaver/$uuid"(controller: "palaver", action: "createPalaver", method: "POST")
+		//"/palaver/$description/$startTimestamp/$startTimestamp"(controller: "palaver", action: "createPalaver", method: "POST")
 		
 		//запустить сессию (начать обзвон по списку абонентов)
 		"/palaver/$uuid/start"(controller: "palaver", action: "startPalaver", method: "POST")
@@ -55,6 +58,11 @@ class UrlMappings {
 		//редирект на указанные страницы с параметром uuid
 		//?page=&uuid=
 		"/redirect"(controller: "palaver", action: "getPage", method: "GET")
+	
+		
+		// Поиск абонента по нескольким введенным символам. Искать по любому текстовому полю или номеру телефона.
+		"/abonent/findByPhone/$phone"(controller: "palaver", action: "findAbonentByPhone", method: "GET")
+		"/abonent/findByText/$text"(controller: "palaver", action: "findAbonentByText", method: "GET")
 		
 		//TODO: удалить. Получить все uuid палаверов
 		"/palaver/uuid"(controller: "palaver", action: "getAllPalaverUuid", method: "GET")

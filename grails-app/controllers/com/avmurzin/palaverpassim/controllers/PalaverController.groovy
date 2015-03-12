@@ -56,27 +56,30 @@ class PalaverController {
 	 * @return
 	 */
 	def createPalaver() {
-		long startTimestamp
-		long stopTimestamp
-		String description = params.description
-
+//		long startTimestamp
+//		long stopTimestamp
+//		String description = params.description
+		UUID uuid = UUID.randomUUID()
 		try {
-			startTimestamp = (long) Long.parseLong(params.startTimestamp)
-			stopTimestamp = (long) Long.parseLong(params.stopTimestamp)
+//			startTimestamp = (long) Long.parseLong(params.startTimestamp)
+//			stopTimestamp = (long) Long.parseLong(params.stopTimestamp)
+			def jsonObject = request.JSON
+			UUID confUuid = UUID.fromString(params.uuid)
+			def conference = Conference.findByUuid(confUuid)
+			def palaver = new Palaver(jsonObject)
+			
+			//println (palaver.startTimestamp + ":" + palaver.stopTimestamp)
+			
+			palaver.uuid = uuid
+			palaver.conference = conference
+			palaver.save(failOnError: true, flush: true)
 		} catch (Exception e) {
 			render(contentType: "application/json") {
 				result = false
 				message = "Неверные параметры"
 			}
 		}
-
-		UUID uuid = UUID.randomUUID()
-
-		def conference = Conference.findByPhoneNumber("3-63-00")
-
-		def palaver = new Palaver(conference: conference, uuid: uuid, description: description, startTimestamp: startTimestamp, stopTimestamp: stopTimestamp)
-		palaver.save(failOnError: true, flush: true)
-
+		//def palaver = new Palaver(conference: conference, uuid: uuid, description: description, startTimestamp: startTimestamp, stopTimestamp: stopTimestamp)
 		render(contentType: "application/json") {
 			result = true
 			message = uuid.toString()
@@ -196,7 +199,7 @@ class PalaverController {
 		long startTimestamp
 		long stopTimestamp
 		Calendar calendar = new GregorianCalendar()
-		SimpleDateFormat formattedDate = new SimpleDateFormat("dd.MM HH:MM")
+		SimpleDateFormat formattedDate = new SimpleDateFormat("dd.MM HH:mm")
 
 		def tree = []
 		def data = []
@@ -222,9 +225,11 @@ class PalaverController {
 				calendar.setTimeInMillis(palaver.stopTimestamp * 1000)
 				String timeTo = formattedDate.format(calendar.getTime())
 
-				data << [image: "group", value : "${palaver.description} (${timeFrom} - ${timeTo})"]
+				//println "${palaver.description}: ${palaver.startTimestamp} : ${palaver.stopTimestamp}"
+				
+				data << [id: "${palaver.uuid.toString()}", image: "group", value : "${palaver.description} (${timeFrom} - ${timeTo})", startTimestamp: "${palaver.startTimestamp}"]
 			}
-			tree << [image: "door_in", value: conference.description, data: data]
+			tree << [image: "door_in", value: conference.description, data: data, startTimestamp: "0"]
 			data = []
 		}
 
@@ -318,10 +323,10 @@ class PalaverController {
 			if(section.get("${type.toString()}") != null) {
 				
 				for(Palaver palaver : Palaver.findAllByPalaverType("${type.toString()}")) {
-					data << [id: "${palaver.uuid.toString()}", value: "${palaver.description}"]
+					data << [id: "${palaver.uuid.toString()}", image: "group", value: "${palaver.description}", palaverType: "${palaver.palaverType}"]
 					
 				}
-				tree << [value: section.get("${type.toString()}"), open: true, data: data]
+				tree << [image: "application_cascade", value: section.get("${type.toString()}"), open: true, data: data]
 				data = []
 			}
 		}
@@ -339,7 +344,79 @@ class PalaverController {
 		String page = params.page;
 		String uuid = params.uuid;
 		
-		render(view: "/${page}", model: [uuid: uuid])
+		UUID outUuid = UUID.fromString(uuid);
+		
+		if(page.equals("template")) {
+			Palaver palaver = Palaver.findByUuid(UUID.fromString(uuid))
+			if (palaver != null) {
+				//если палавер является стартуемым немедленно, то сдалать копию и перейти к странице запуска
+				if(palaver.palaverType.equals(PalaverType.PREPARED)) {
+					outUuid = uiManipulation.copyPalaver(palaver.uuid)
+					page = "palaverControl"
+				}
+			}
+		}
+		
+		render(view: "/${page}", model: [uuid: outUuid])
+	}
+	
+	/**
+	 * Поиск абонента по нескольким введенным символам. Искать по любому текстовому
+	 * полю.
+	 * @return
+	 */
+	def findAbonentByText() {
+		String text = params.text
+
+		def out = []
+
+		def abonents = Abonent.findAll("from Abonent as a where a.fName like ? or a.mName like ? or a.lName like ? or description like ?",
+				["%${text}%", "%${text}%", "%${text}%", "%${text}%"])
+
+		if(abonents.size() != 0){
+			for(Abonent abonent : abonents) {
+				out << [uuid: "${abonent.uuid.toString()}", description: "${abonent.fName} ${abonent.mName} ${abonent.lName} (${abonent.description})",
+					phone: "${abonent.phones.find().phoneNumber}"]
+			}
+
+			render(contentType: "application/json") {
+				out
+			}
+		} else {
+			render(contentType: "application/json") {
+				result = false
+			}
+		}
+	}
+	
+	/**
+	 * Поиск абонента по нескольким введенным символам. Искать по телефону.
+	 * @return
+	 */
+	def findAbonentByPhone() {
+		String text = (params.phone =~ /\D/).replaceAll("")
+		
+		def out = []
+		
+		def abonents = Abonent.executeQuery("FROM Abonent a WHERE a IN(SELECT p.abonent FROM Phone p WHERE digitalPhoneNumber LIKE ?)", ["%${text}%"])
+		
+		if(abonents.size() != 0){
+			for(Abonent abonent : abonents) {
+				out << [uuid: "${abonent.uuid.toString()}", 
+					description: "${abonent.fName} ${abonent.mName} ${abonent.lName} (${abonent.description})", 
+					phone: "${abonent.phones.find().phoneNumber}"]
+			}
+			
+			render(contentType: "application/json") {
+				out
+			}
+		} else {
+			render(contentType: "application/json") {
+				result = false
+			}
+		}
+		
+		
 	}
 
 	//TODO: удалить

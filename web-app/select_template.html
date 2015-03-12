@@ -101,7 +101,7 @@ var template_tree = {
     id : "template_tree",
     select : true,
     type:"lineTree",
-    //template:"{common.icon()} <img src='images/#image#.gif' style='float:left; margin:3px 4px 0px 1px;'> <span>#value#</span>",
+    template:"{common.icon()} <img src='images/#image#.png' style='float:left; margin:3px 4px 0px 1px;'> <span>#value#</span> <div display: none>#palaverType#</div>",
     data : [{id: "123", value: "Требуется залогиниться", image: "VIRTUAL"}],
     on:{
         onItemClick:function(id){
@@ -110,6 +110,7 @@ var template_tree = {
        }
 };    
 
+//
 var template_description_list = {
         view: "list",
         id: "template_description",
@@ -118,7 +119,7 @@ var template_description_list = {
         data:[]
 } 
 
-var start_button = { view:"button", id:"next_button", label:"Перейти", type:"next", on:{
+var start_button = { view:"button", id:"next_button", label:"", type:"next", on:{
     onItemClick:function(){
         goToPalaver();
     }
@@ -135,13 +136,24 @@ webix.ui({
     ]
 });
 
+var palaverType = "";
+
 function template_properties(id) {
     webix.ajax("palaver/" + id, function(text, data) {
         //webix.message(text);
         if(data.json().description == '') {
         	$$("next_button").disable();
+        	$$("next_button").setValue('');
         } else {
         	$$("next_button").enable();
+        	if(data.json().palaverType == 'PREPARED') {
+        		palaverType = "PREPARED";
+        		$$("next_button").setValue('Перейти к запуску конференции');
+        	}
+        	if(data.json().palaverType == 'TEMPLATE') {
+                $$("next_button").setValue('Создать конференцию на базе шаблона');
+                palaverType = "TEMPLATE";
+            }
         }
         $$("template_label").setValue("<span class='label'>Свойства шаблона </span><span class='label'></span><span class='label2'> " + data.json().description + "</span>");
         $$("template_description").clearAll();
@@ -151,10 +163,13 @@ function template_properties(id) {
 	
 }
 
+//перейти к выбранному из перечня шаблонов палаверу
 function goToPalaver() {
+	//webix.alert(palaverType);
 	var tree_id = $$("template_tree").getSelectedId();
 	//webix.message(tree_id);
-	window.location.href = "redirect?page=nks&uuid=" + tree_id;
+	//window.location.href = "redirect?page=nks&uuid=" + tree_id;
+	window.location.href = "redirect?page=template&uuid=" + tree_id;
     //webix.ajax("redirect?page=nks&uuid=" + tree_id, function(text, data) {
        
     //});

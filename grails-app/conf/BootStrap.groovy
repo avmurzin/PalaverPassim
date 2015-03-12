@@ -46,10 +46,10 @@ class BootStrap {
 			
 			def ph = "${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}"
 			if(abonent.lName.equals("Вунюков")) {
-				ph = "9513559"
+				ph = "9-513-559"
 			}
 			if(abonent.lName.equals("Хлебовводов")) {
-				ph = "989086467383"
+				ph = "9-8-908-6467-383"
 			}
 			if(abonent.lName.equals("Выбегалло")) {
 				ph = "1300"
@@ -74,17 +74,17 @@ class BootStrap {
 		group.save(failOnError: true, flush: true)
 
 		//тестовый набор конференций
-		conference = new Conference(uuid: UUID.randomUUID(), description: "One",
+		conference = new Conference(uuid: UUID.randomUUID(), description: "Комната переговоров 2900",
 		//phoneNumber: "${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}")
 		phoneNumber: "2900")
 		conference.save(failOnError: true, flush: true)
 
-		conference = new Conference(uuid: UUID.randomUUID(), description: "Two",
+		conference = new Conference(uuid: UUID.randomUUID(), description: "Комната переговоров 2910",
 		//phoneNumber: "${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}")
 		phoneNumber: "2910")
 		conference.save(failOnError: true, flush: true)
 
-		conference = new Conference(uuid: UUID.randomUUID(), description: "Three",
+		conference = new Conference(uuid: UUID.randomUUID(), description: "Комната переговоров 2911",
 		//phoneNumber: "${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}-${Math.round(Math.random()*100)}")
 		phoneNumber: "2911")
 		conference.save(failOnError: true, flush: true)
@@ -98,7 +98,7 @@ class BootStrap {
 		palaver = new Palaver(uuid: UUID.fromString("ca4356df-4a2b-4df2-8a5f-dfc8b0294576"), description: "Говорилка №1",
 		startTimestamp: nowTime + hour*2, stopTimestamp: nowTime + hour*3, palaverType: PalaverType.PREPARED.toString())
 		palaver.conference = Conference.find("from Conference as c where c.description=:desc",
-				[desc: "One"])
+				[desc: "Комната переговоров 2900"])
 		palaver.abonent = Abonent.findAll("from Abonent as a where a.lName in (:names)",
 				[names: ['Вунюков','Хлебовводов','Выбегалло']])
 		palaver.save(failOnError: true, flush: true)
@@ -106,7 +106,7 @@ class BootStrap {
 		palaver = new Palaver(uuid: UUID.randomUUID(), description: "Говорилка №2",
 		startTimestamp: nowTime + hour*2, stopTimestamp: nowTime + hour*3, palaverType: PalaverType.PREPARED.toString())
 		palaver.conference = Conference.find("from Conference as c where c.description=:desc",
-				[desc: "Two"])
+				[desc: "Комната переговоров 2910"])
 		palaver.abonent = Abonent.findAll("from Abonent as a where a.lName in (:names)",
 				[names: ['Константинов','Говорун']])
 		palaver.save(failOnError: true, flush: true)
@@ -114,7 +114,7 @@ class BootStrap {
 		palaver = new Palaver(uuid: UUID.randomUUID(), description: "Говорилка №3",
 		startTimestamp: nowTime + hour*6, stopTimestamp: nowTime + hour*7, palaverType: PalaverType.TEMPLATE.toString())
 		palaver.conference = Conference.find("from Conference as c where c.description=:desc",
-				[desc: "Two"])
+				[desc: "Комната переговоров 2910"])
 		palaver.abonent = Abonent.findAll("from Abonent as a where a.lName in (:names)",
 				[names: ['Константинов','Говорун']])
 		palaver.save(failOnError: true, flush: true)

@@ -88,7 +88,7 @@ var container_tree = {
     data : [{id: "123", value: "Требуется залогиниться", image: "group"}],
     on:{
         onItemClick:function(id){
-            //container_properties(id);
+            palaver_properties(id);
         }
        }
 };    
@@ -131,6 +131,7 @@ function update_form() {
         $$("container_tree").parse(data.json());
         $$("container_tree").openAll();
         $$("container_tree").refresh();
+        $$("container_tree").sort('#startTimestamp#', 'asc');
 
     });
 }
@@ -148,19 +149,40 @@ webix.ui({
 
 //создание палавера
 function createPalaver() {
-	var startTimestamp = $$('palaver_form').getValues().start.getTime() / 1000;
-	var stopTimestamp = $$('palaver_form').getValues().end.getTime() / 1000;
-	var description = $$('palaver_form').getValues().description;
-	
-    webix.ajax().post("palaver/" + description + "/" + startTimestamp + "/" + stopTimestamp, {}, function(text, data) {
+	if(($$('palaver_form').getValues().start == null) || ($$('palaver_form').getValues().end == null)) {
+		webix.alert("Заполнены не все поля");
+		return;
+	}
+	var startTime = $$('palaver_form').getValues().start.getTime() / 1000;
+	var stopTime = $$('palaver_form').getValues().end.getTime() / 1000;
+	var desc = $$('palaver_form').getValues().description;
+	var id = $$('palaver_form').getValues().conference;
+	var palaver = {
+			startTimestamp: startTime,
+			stopTimestamp: stopTime,
+			description: desc,
+			palaverType: "NORMAL"
+	};
+	//webix.alert(startTime + ":" + stopTime);
+    webix.ajax().headers({"Content-type":"application/json"}).post("palaver/"+id, 
+            JSON.stringify(palaver), 
+            function(text, data) {
         if (data.json().result == false) {
             webix.alert(data.json().message);
         } else {
-        	update_tree();
+        	update_form();
         }
     });
 };
 
+//перейти к редактированию палавера
+function palaver_properties(id) {
+	var patt = /^\d+$/
+	if(!patt.test(id)) {
+		window.location.href = "redirect?page=nks&uuid=" + id;
+	}
+	    
+}
 
 //тестовая функция создания абонента
 var abonent = {
@@ -191,6 +213,7 @@ function update_tree() {
         $$("container_tree").parse(data.json());
         $$("container_tree").openAll();
         $$("container_tree").refresh();
+        $$("container_tree").sort('#startTimestamp#', 'asc');
 
     });
 }
