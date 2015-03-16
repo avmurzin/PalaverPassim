@@ -17,17 +17,24 @@ class UrlMappings {
 		//создать сессию (запланировать в расписании)
 		//передается JSON объект, соотв. доменному классу Palaver
 		//и параметр uuid - номер комнаты
-		"/palaver/$uuid"(controller: "palaver", action: "createPalaver", method: "POST")
+		//"/palaver/$uuid"(controller: "palaver", action: "createPalaver", method: "POST")
 		//"/palaver/$description/$startTimestamp/$startTimestamp"(controller: "palaver", action: "createPalaver", method: "POST")
+		
+		//обновить палавер (передать новые свойства)
+		//передается JSON объект, соотв. доменному классу Palaver
+		"/palaver/$uuid"(controller: "palaver", action: "updatePalaver", method: "POST")
+		
+		//получить сессию со списком абонентов и их статусами
+		"/palaver/$uuid"(controller: "palaver", action: "getPalaver", method: "GET")
+		
+		//удалить сессию
+		"/palaver/$uuid"(controller: "palaver", action: "deletePalaver", method: "DELETE")
 		
 		//запустить сессию (начать обзвон по списку абонентов)
 		"/palaver/$uuid/start"(controller: "palaver", action: "startPalaver", method: "POST")
 		
 		//остановить сессию (отключить по списку абонентов)
 		"/palaver/$uuid/stop"(controller: "palaver", action: "stopPalaver", method: "POST")
-		
-		//получить сессию со списком абонентов и их статусами
-		"/palaver/$uuid"(controller: "palaver", action: "getPalaver", method: "GET")
 		
 		//добавить абонента
 		//передается JSON объект, соотв. доменному классу Abonent
@@ -38,6 +45,9 @@ class UrlMappings {
 		//возвращает JSON объект, соотв. таблице
 		"/palaver/timeline"(controller: "palaver", action: "getPalaverTimeline", method: "GET")
 		
+		//получить список всех активных палаверов на текущий момент
+		"/palaver/active"(controller: "palaver", action: "getActivePalaver", method: "GET")
+		
 		//Получить список конференций (комнат).
 		"/conference"(controller: "palaver", action: "getConference", method: "GET")
 		
@@ -47,6 +57,9 @@ class UrlMappings {
 		
 		//отключить абонента от палавера
 		"/palaver/$palaveruuid/abonent/$uuid/kick"(controller: "palaver", action: "kickAbonentFromPalaver", method: "GET")
+		
+		//добавить абонента к палаверу
+		"/palaver/$palaveruuid/abonent/$uuid"(controller: "palaver", action: "addAbonentToPalaver", method: "POST")
 		
 		//подключить абонента к палаверу
 		"/palaver/$palaveruuid/abonent/$uuid/connect"(controller: "palaver", action: "connectAbonentToPalaver", method: "GET")

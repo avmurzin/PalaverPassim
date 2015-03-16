@@ -95,6 +95,13 @@ class BootStrap {
 		long hour = 3600
 		
 		//palaver = new Palaver(uuid: UUID.randomUUID(), description: "Говорилка №1",
+		palaver = new Palaver(uuid: UUID.randomUUID(), description: "Пустой шаблон",
+			startTimestamp: 0, stopTimestamp: 0, palaverType: PalaverType.TEMPLATE.toString())
+		palaver.conference = Conference.find("from Conference as c where c.description=:desc",
+			[desc: "Комната переговоров 2900"])
+		palaver.abonent = []
+		palaver.save(failOnError: true, flush: true)
+		
 		palaver = new Palaver(uuid: UUID.fromString("ca4356df-4a2b-4df2-8a5f-dfc8b0294576"), description: "Говорилка №1",
 		startTimestamp: nowTime + hour*2, stopTimestamp: nowTime + hour*3, palaverType: PalaverType.PREPARED.toString())
 		palaver.conference = Conference.find("from Conference as c where c.description=:desc",

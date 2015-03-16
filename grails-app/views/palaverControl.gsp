@@ -123,10 +123,10 @@
 <g:javascript>
 //содержимое главного меню
 var menu_data = [
-    { id:"1",value:"Управление конференцией", submenu:[
-         {id: "1.1", value: "Начать"}, 
-         {id: "1.2", value: "Завершить"}
-    ]}
+    { id:"1",value:"Вызвать всех, начать конференцию"}, 
+     { id:"2",value:"Отключить всех, завершить конференцию" },
+     {id:"3",value:"Завершено, вернуться на главную" },
+     {id:"4",value:"Назад" }
 ];
 
 //объект главного меню
@@ -161,7 +161,7 @@ var toolbar = {
         ]
     };
  
-//блок списка абонентов конференции
+//блок списка абонентов конференции с кнопками управления
 var abonents_list = {
         view: "list",
         id: "abonents",
@@ -178,7 +178,7 @@ var abonents_list = {
                 return false;
             },
            disconnected:function(e, id){
-            webix.message("Абонент будет подключен, ожидайте");
+            //webix.message("Абонент будет подключен, ожидайте");
             connect_abonent(this.getItem(id).uuid);
             return false;
            },
@@ -216,9 +216,10 @@ var form_addabonent = {
         id:"form_addabonent",
         width: "auto",
         elements:[{view:"fieldset", label:"Пригласить в конференцию", body:{rows:[
-            { view:"text", name:"name", label:"Имя: ", on:{'onTimedKeyPress': function(){ onNameChange(); }
+            { view:"text", name:"name", label:"Имя: ", placeholder: "Начинайте вводить буквы для поиска", on:{'onTimedKeyPress': function(){ onNameChange(); }
              }},
-            { view:"text", name:"phone", label:"Телефон: "},
+            { view:"text", name:"phone", label:"Телефон: ", placeholder: "Начинайте вводить цифры для поиска", on:{'onTimedKeyPress': function(){ onPhoneChange(); }
+             }},
             { margin:5, view:"button", value:"Добавить", on : {
                 onItemClick:function(){
                     add_abonent();
@@ -227,7 +228,7 @@ var form_addabonent = {
        ] }}]
         }
 
-//нижний лист найденный абонентов (обновляется по мере ввода данных в форму приглашения)
+//нижний лист найденных абонентов (обновляется по мере ввода данных в форму приглашения дополнительного абонента)
 var search_list = {
         view: "list",
         id: "search_list",
@@ -236,10 +237,13 @@ var search_list = {
         data:[],
         on:{
         onItemClick:function(id){
-            select_abonent(this.getItem(id).description, this.getItem(id).phone);
+            select_abonent(id, this.getItem(id).description, this.getItem(id).phone);
         }
        }
 }
+
+//переменная хранит id выбранного из списка поиска абонента
+var abonent_id = '';
 
 //верстка страницы интерфейса
 webix.ui({
@@ -252,20 +256,23 @@ webix.ui({
         
     ]
 });
-
+ 
 //обработка меню
 function menuSelect(id) {
-	//webix.message(id);
     switch(id) {
-    case "1.1":
+    case "1":
+        $$("top_menu").hideItem("4");
         start_palaver();
-        //$$("top_menu").showItem("1.2");
-        //$$("top_menu").hideItem("1.1");
          break;
-    case "1.2":
+    case "2":
+        $$("top_menu").hideItem("4");
         stop_palaver();
-        //$$("top_menu").showItem("1.1");
-        //$$("top_menu").hideItem("1.2");
+         break;
+    case "3":
+        window.location.href = "index.html";
+         break;
+    case "4":
+        go_back();
          break;
     default:
 }
@@ -280,8 +287,8 @@ function start_palaver() {
         } else {
         	webix.alert(data.json().message);
         	palaverUuid = data.json().message;
-        	$$("top_menu").hideItem("1.1");
-        	$$("top_menu").showItem("1.2");
+        	$$("top_menu").hideItem("1");
+        	$$("top_menu").showItem("2");
         	refresh_timeout();
         }
     });
@@ -292,6 +299,11 @@ function stop_palaver() {
         if (data.json().result == false) {
             webix.alert(data.json().message);
         } else {
+            $$("top_menu").hideItem("2");
+            $$("top_menu").hideItem("1");
+            $$("top_menu").showItem("3");
+            $$('form_addabonent').disable();
+            $$("abonents").disable();
             webix.alert(data.json().message);
         }
     });
@@ -308,7 +320,9 @@ function kick_abonent(uuid) {
 function connect_abonent(uuid) {
 	//webix.message("palaver/" + palaverUuid + "/abonent/" + uuid + "/connect");
     webix.ajax("palaver/" + palaverUuid + "/abonent/" + uuid + "/connect", function(text, data) {
-
+    if (data.json().result == false) {
+            webix.alert(data.json().message);
+    }
     });     
 }
 
@@ -325,6 +339,8 @@ function audioFromAbonent(uuid, todo) {
 
 //функция поиска по текстовой части абонента
 function onNameChange() {
+    abonent_id = '';
+    $$('form_addabonent').setValues({ phone:"" }, true);
     var text = $$('form_addabonent').getValues().name;
     webix.ajax("abonent/findByText/" + text, function(text, data) {
         $$("search_list").clearAll();
@@ -333,12 +349,53 @@ function onNameChange() {
     });
 }
 
+//функция поиска по телефонной (цифровой) части абонента
+function onPhoneChange() {
+    abonent_id = '';
+    $$('form_addabonent').setValues({ name:"" }, true);
+    var text = $$('form_addabonent').getValues().phone;
+    webix.ajax("abonent/findByPhone/" + text, function(text, data) {
+        $$("search_list").clearAll();
+        $$("search_list").parse(data.json());
+        $$("search_list").sort('#description#', 'asc');
+    });
+}
+
 //функция обновления формы приглашения по выбранной позиции в нижнем листе.
-function select_abonent(description, phone) {
-        
+function select_abonent(id, description, phone) {
+        abonent_id = id;
         $$("form_addabonent").setValues({name: description, phone: phone});
         $$("search_list").clearAll();
 }
+
+//Функция добавления абонента в палавер. Если абонент выбран из списка, то передается id,
+// если нет, то вызывается функция создания нового абонента и далее подключение его к палаверу.
+function add_abonent() {
+        if(abonent_id == '') {
+            webix.message("No id");
+        } else {
+            webix.ajax("palaver/" + palaverUuid + "/abonent/" + abonent_id + "/connect", function(text, data) {
+                if (data.json().result == false) {
+                    webix.alert(data.json().message);
+                    refresh();
+                } else {
+                    refresh();
+                }
+            }); 
+        }
+        
+}
+
+function go_back() {
+    webix.ajax().del("palaver/" + palaverUuid, {}, function(text, data) {
+        if (data.json().result == false) {
+            webix.alert(data.json().message);
+        } else {
+            window.history.back(); 
+        }
+    }); 
+}
+
 
 function refresh_timeout() {
     webix.ajax("palaver/" + palaverUuid, function(text, data) {
@@ -366,7 +423,8 @@ function refresh() {
 }
 
 webix.attachEvent("onReady", function(){
-    $$("top_menu").hideItem("1.2");
+    $$("top_menu").hideItem("2");
+    $$("top_menu").hideItem("3");
   refresh();
 });
 

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+    <head>
+     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <link rel="stylesheet" href="codebase/webix.css" type="text/css" media="screen" charset="utf-8">
+        <script src="codebase/webix.js" type="text/javascript" charset="utf-8"></script>
+        <style>
+
+            .blue.webix_menu-x{
+                background:#3498DB;
+            }
+        </style>
+        
+        <title>Управление телефонными конференциями</title>
+    </head>
+    <style type="text/css">
+        .mark{
+            width:100px;
+            text-align: center;
+            font-weight:bold;
+            float:right;
+            background-color:#777;
+            color:white;
+            border-radius:3px;
+        }
+        .info{
+            width:100px;
+            text-align: center;
+            font-weight:normal;
+            float:right;
+            background-color:#F99;
+            color:white;
+            border-radius:3px;
+        }
+    </style>
+    
+    <body>
+<script type="text/javascript" charset="utf-8">
+
+//содержимое главного меню
+var menu_data = [
+    { id:"1",value:"На главную"}
+];
+
+//обработка меню
+function menuSelect(id) {
+    switch(id) {
+    case "1":
+        window.location.href = "index.html";
+         break;
+    default:
+}
+};
+
+//объект главного меню
+var menu = {
+    view:"menu",
+    id: "top_menu",
+    data: menu_data,
+    css:"blue",
+    type:{
+        subsign:true,
+
+    },
+    on:{
+        onMenuItemClick:function(id){
+            menuSelect(id);
+        }
+        }
+};
+
+
+//тулбар справа от главного меню
+var toolbar = {
+        view:"toolbar", paddingY:0,  elements:[
+            {}, 
+            { view:"label", id:"logged_user", value: "", align: "right"},
+            { view:"button", label:"Выйти", width:100, on:{
+                onItemClick:function(){
+                    logout();
+                }
+                } }
+        ]
+    };
+    
+//дерево контейнеров (правый блок)
+var container_tree = {
+    view : "tree",
+    id : "container_tree",
+    select : true,
+    type:"lineTree",
+    template:"{common.icon()} <img src='images/#image#.png' style='float:left; margin:3px 4px 0px 1px;'> <span>#value#</span>",
+    data : [{id: "123", value: "Требуется залогиниться", image: "group"}],
+    on:{
+        onItemClick:function(id){
+            palaver_properties(id);
+        }
+       }
+};    
+
+//форма создания палавера
+var create_palaver = {
+		view:"form", id: "palaver_form", width: 250, scroll:false, elements:[
+		                              { view:"datepicker", timepicker:true, label:"Начало", name:"start", stringResult:false, format:"%d.%m.%Y %H:%i", on:{
+		                            	  onChange:function(){
+		                            		  update_form();
+		                                  }
+		                                  }  },
+		                              { view:"datepicker", timepicker:true, label:"Конец", name:"end", stringResult:false, format:"%d.%m.%Y %H:%i", on:{
+                                          onChange:function(){
+                                              update_form();
+                                          }
+                                          }  },
+
+		                                 ]
+		
+}
+
+function update_form() {
+	var start = $$('palaver_form').getValues().start;
+	var startTimestamp = start.getTime() / 1000;
+	var end = $$('palaver_form').getValues().end;
+	var stopTimestamp = startTimestamp + 86400;
+	if (end != null) {
+		stopTimestamp = end.getTime() / 1000;
+	}
+	
+    $$("container_tree").clearAll();
+    webix.ajax("palaver/timeline?startTimestamp=" + startTimestamp + "&stopTimestamp=" + stopTimestamp, function(text, data) {
+        $$("container_tree").parse(data.json());
+        $$("container_tree").openAll();
+        $$("container_tree").refresh();
+        $$("container_tree").sort('#startTimestamp#', 'asc');
+
+    });
+}
+
+//верстка страницы интерфейса
+webix.ui({
+    rows:[
+        {type:"clean", cols: [menu,toolbar]},
+        { cols: [{rows: [{view: "label", label:"<span class='webix_property_label_line'>Период времени</span>"}, 
+                         create_palaver, {}]}, 
+                 {view:"resizer"}, 
+                 {rows: [{view: "label", label:"<span class='webix_property_label_line'>Запланированные на выбранный период встречи</span>"}, container_tree]}]}
+    ]
+});
+
+
+
+//перейти к редактированию палавера
+function palaver_properties(id) {
+	var patt = /^\d+$/
+	if(!patt.test(id)) {
+		window.location.href = "redirect?page=edit&uuid=" + id;
+	}
+	    
+}
+
+function update_tree() {
+    $$("container_tree").clearAll();
+    webix.ajax("palaver/timeline", function(text, data) {
+    	
+        $$("container_tree").parse(data.json());
+        $$("container_tree").openAll();
+        $$("container_tree").refresh();
+        $$("container_tree").sort('#startTimestamp#', 'asc');
+
+    });
+}
+
+//окно загрузилось
+webix.attachEvent("onReady", function(){
+	update_tree();
+	 
+});
+
+function logout() {
+    webix.message("Выход")
+    window.location.assign("auth/signOut");
+}
+</script>
+    </body>
+</html>

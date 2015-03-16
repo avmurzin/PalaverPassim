@@ -39,22 +39,18 @@
 
 //содержимое главного меню
 var menu_data = [
-    { id:"1",value:"Конференция", submenu:[
-        {id: "1.1", value: "Создать"}
-    ]},
-    {id:"2", value: "Расписание"},
-    {id:"3", value: "Абоненты", submenu:[
-                                         {id: "3.1", value: "Справочник"}
-                                     ]},
-    {id:"4", value: "Шаблоны", submenu:[
-                                         {id: "4.1", value: "Редактировать"}
-                                     ]},
-    {id: "10", value: "Помощь", submenu:[
-                                         {id: "10.1", value: "О системе"}, 
-                                         {id: "10.2", value: "Справка"}
-                                     ]}
+    { id:"1",value:"На главную"}
 ];
 
+//обработка меню
+function menuSelect(id) {
+    switch(id) {
+    case "1":
+        window.location.href = "index.html";
+         break;
+    default:
+}
+};
 
 //объект главного меню
 var menu = {
@@ -100,11 +96,11 @@ var template_tree = {
             template_properties(id);
         }
        }
-};   
+};    
 
 //пояснительный текст справа
 var help_text = { view:"textarea", 
-		label:"Справка", labelPosition:"top", disabled: true, height: 300, value: "Как только кто-либо создаст и запустит конференцию, она появится в списке слева. \n\nК активной конференции можно подключиться для управления или участия, щелкнув по ней. \n\nДля создания своей конференции и других действий воспользуйтесь меню.\nДля организации телефонной встречи можно воспользоваться готовыми для запуска конференциями, отредактировать шаблон или сделать всё с нуля.\n\nСозданную конференцию можно запустить немедленно или поместить в расписание." };
+        label:"Справка", labelPosition:"top", disabled: true, height: 300, value: "Щелклните на названии шаблона слева для его редактирования." };
 
 //верстка страницы интерфейса
 webix.ui({
@@ -119,57 +115,33 @@ webix.ui({
     ]
 });
 
-//если щелкнули на заголовке активного палавера, то перейти к странице управления им.
+
+
+//перейти к редактированию палавера
 function template_properties(id) {
-    webix.ajax("palaver/" + id, function(text, data) {
-        if(data.json().description == '') {
-
-        } else {
-        	window.location.href = "redirect?page=palaverControl&uuid=" + id;
-        }
-    });
-    
+	var patt = /^\d+$/
+	if(!patt.test(id)) {
+		window.location.href = "redirect?page=edit_template&uuid=" + id;
+	}
+	    
 }
 
-//обработка меню
-function menuSelect(id) {
-    switch(id) {
-    case "1.1":
-    	window.location.href = "select_template.html";
-         break;
-    case "1.2":
-         break;
-    case "2":
-        window.location.href = "timeline.html";
-         break;
-    case "3":
-        window.location.href = "index.html";
-         break;
-    case "4.1":
-        window.location.href = "template.html";
-         break;
-    default:
-}
-};
-
-//периодическое обновление дерева активных палаверов
 function update_tree() {
     $$("template_tree").clearAll();
-    webix.ajax("palaver/active", function(text, data) {
-    	
+    webix.ajax("interface/template", function(text, data) {
         $$("template_tree").parse(data.json());
         $$("template_tree").openAll();
         $$("template_tree").refresh();
-        $$("template_tree").sort('#value#', 'asc');
-        setTimeout(update_tree, 2000);
-
+        $$("template_tree").sort('value', 'asc');
+        $$("next_button").disable();
+        
     });
 }
 
 //окно загрузилось
 webix.attachEvent("onReady", function(){
-	update_tree();
-	 
+    update_tree();
+     
 });
 
 function logout() {

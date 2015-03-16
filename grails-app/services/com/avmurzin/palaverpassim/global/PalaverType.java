@@ -22,7 +22,8 @@ public enum PalaverType {
 //	public String getKey() { return name(); }
 	NORMAL(""),
 	TEMPLATE("Шаблоны"),
-	PREPARED("Стандартные мероприятия");
+	PREPARED("Стандартные мероприятия"),
+	EMPTY("Пустой шаблон");
 	
 	String description;
 	

@@ -1,7 +1,6 @@
 package com.avmurzin.palaverpassim.system;
 
 import java.util.List;
-
 import com.avmurzin.palaverpassim.db.Abonent;
 import com.avmurzin.palaverpassim.db.Conference;
 import com.avmurzin.palaverpassim.db.Palaver;
@@ -26,6 +25,13 @@ public interface CallMachine {
 	 * @return
 	 */
 	boolean disconnect(Abonent abonent, Palaver palaver);
+	
+	/**
+	 * Очистить конференцию (т.е. отключить абонентов, если есть, очистить все структуры данных, проставить время завершения). 
+	 * @param palaver
+	 * @return
+	 */
+	boolean clearPalaver(Palaver palaver);
 	
 	/**
 	 * Установка состояния аудиоканала к абоненту в палавере.
@@ -142,6 +148,12 @@ public interface CallMachine {
 //	 * @return
 //	 */
 //	boolean isMutedFromAbonent(Abonent abonent, Conference conference);
+	
+	/**
+	 * Получить коллекцию палаверов, активных в данный момент.
+	 * @return List<Palaver>
+	 */
+	List<Palaver> getActivePalaver();
 	
 	/**
 	 * Получить список телефонов, которыми абонент подключен к палаверу.

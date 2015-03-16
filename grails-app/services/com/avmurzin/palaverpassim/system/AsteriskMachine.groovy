@@ -84,6 +84,17 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 		OriginateAction originateAction;
 		ManagerResponse originateResponse;
 
+		// connect to Asterisk and log in
+		if(managerConnection.getState() != ManagerConnectionState.CONNECTED) {
+			
+			try {
+				managerConnection.login("on");
+			} catch (Exception e) {
+				return false;
+			}
+			
+		}
+		
 		//проверить есть ли палавер в запущенных, создать если нет.
 		if(roomMap.get(palaver.uuid) == null) {
 			room = new Room();
@@ -128,7 +139,7 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 
 			//TODO: процедура выбора канала в зависимости от номера.
 			if(member.phone ==~ /^1[3498]\d+/) {
-				channel = ""
+				channel = "SIP/as5350gw/${member.phone}";
 			} else {
 				channel = "SIP/as5350gw/${member.phone}";
 			}
@@ -149,10 +160,7 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 			originateAction.setActionId("${member.actionId}");
 			originateAction.setAsync(true);
 
-			// connect to Asterisk and log in
-			if(managerConnection.getState() != ManagerConnectionState.CONNECTED) {
-				managerConnection.login("on");
-			}
+
 
 			member.abonentStatus = AbonentStatus.INPROCESS;
 			originateResponse = managerConnection.sendAction(originateAction, 30000);
@@ -173,9 +181,12 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 
 		// connect to Asterisk and log in
 		if(managerConnection.getState() != ManagerConnectionState.CONNECTED) {
-			managerConnection.login("on");
+			try {
+				managerConnection.login("on");
+			} catch (Exception e) {
+				return false;
+			}
 		}
-
 		//проверить есть ли палавер и абонент в запущенных
 		if(roomMap.get(palaver.uuid) != null) {
 			room = roomMap.get(palaver.uuid);
@@ -185,12 +196,15 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 				confbridgeKickAction = new ConfbridgeKickAction(room.confBridge, member.channel);
 				originateResponse = managerConnection.sendAction(confbridgeKickAction, 30000);
 			}
+			//и если абонент был последний, то всё почистить
+			if(room.member.size() == 0) {
+				clearPalaver(room.getUuid())
+			}
 		} else {
 			return false;
 		}
 		return true;
 	}
-
 
 
 	//	@Override
@@ -395,6 +409,67 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 	}
 
 	/**
+	 * Очистить конференцию (т.е. отключить абонентов, если есть, очистить все структуры данных, проставить время завершения).
+	 * @param palaver
+	 * @return
+	 */
+	public boolean clearPalaver(Palaver palaver) {
+		return clearPalaver(palaver.uuid);
+	}
+	
+	public boolean clearPalaver(UUID uuid) {
+		Room room;
+		//Member member;
+		ConfbridgeKickAction confbridgeKickAction;
+		ManagerResponse originateResponse;
+
+		// connect to Asterisk and log in
+		if(managerConnection.getState() != ManagerConnectionState.CONNECTED) {
+			try {
+				managerConnection.login("on");
+			} catch (Exception e) {
+				return false;
+			}
+		}
+		
+		//проверить есть ли палавер в запущенных. Если есть, кикнуть всех абонентов.
+		if(roomMap.get(uuid) != null) {
+			room = roomMap.get(uuid);
+			for(Member member : room.member.values()) {
+				confbridgeKickAction = new ConfbridgeKickAction(room.confBridge, member.channel);
+				originateResponse = managerConnection.sendAction(confbridgeKickAction, 30000);
+			}
+			//удалить запись о палавере и проставить время окончания.
+			roomMap.remove(room.uuid);
+			Palaver palaver = Palaver.findByUuid(room.uuid);
+			//изменить время завершения на фактическое
+			Calendar calendar = new GregorianCalendar();
+			long nowTime = calendar.getTimeInMillis() / 1000;
+			palaver.stopTimestamp = nowTime;
+			palaver.save(failOnError: true, flush: true);
+			println "Завершаем конференцию"
+		} else {
+			return true;
+		}
+		return true;
+	}
+	
+	/**
+	 * Получить список всех активных в текущий момент палаверов.
+	 * @return List<Palaver>
+	 */
+	public List<Palaver> getActivePalaver() {
+		List<Palaver> palaverList = new ArrayList<Palaver>()
+		for(UUID uuid : roomMap.keySet()) {
+			if(Palaver.findByUuid(uuid) != null) {
+				palaverList << Palaver.findByUuid(uuid)
+			}
+
+		}
+		return palaverList;
+	}
+	
+	/**
 	 * Реакция на события.
 	 */
 	@Override
@@ -425,6 +500,14 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 						member.abonentStatus = AbonentStatus.DISCONNECTED;
 						member.audioToStatus = AudioStatus.MUTED;
 						member.audioFromStatus = AudioStatus.MUTED;
+						//пожалуй правильнее будет удалить абонента из списка живых вообще
+						room.member.remove(UUID.fromString(orEvent.getActionId()));
+						println "Абонент ${member.phone} отключен, удаляется. В комнате ${room.member.size()} абонентов"
+						//и если абонент был последний, то всё почистить
+						if(room.member.size() == 0) {
+							clearPalaver(room.getUuid())
+						}
+						
 					}
 				}
 			}
@@ -441,7 +524,10 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 						room.member.remove(abonent.uuid);
 						
 						println "Абонент ${abonent.phone} отключен, удаляется. В комнате ${room.member.size()} абонентов"
-						
+						//и если абонент был последний, то всё почистить
+						if(room.member.size() == 0) {
+							clearPalaver(room.getUuid())
+						}
 					}
 				}
 			}
@@ -485,7 +571,5 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 
 
 	}
-
-
 
 }
