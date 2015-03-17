@@ -123,9 +123,6 @@
 <g:javascript>
 //содержимое главного меню
 var menu_data = [
-    { id:"1",value:"Вызвать всех, начать конференцию"}, 
-     { id:"2",value:"Отключить всех, завершить конференцию" },
-     {id:"3",value:"Завершено, вернуться на главную" },
      {id:"4",value:"Назад" }
 ];
 
@@ -260,17 +257,6 @@ webix.ui({
 //обработка меню
 function menuSelect(id) {
     switch(id) {
-    case "1":
-        $$("top_menu").hideItem("4");
-        start_palaver();
-         break;
-    case "2":
-        $$("top_menu").hideItem("4");
-        stop_palaver();
-         break;
-    case "3":
-        window.location.href = "index.html";
-         break;
     case "4":
         go_back();
          break;
@@ -513,9 +499,8 @@ function refresh() {
 }
 
 webix.attachEvent("onReady", function(){
-    $$("top_menu").hideItem("2");
-    $$("top_menu").hideItem("3");
-  refresh();
+
+  refresh_timeout();
 });
 
 function logout() {

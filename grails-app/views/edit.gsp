@@ -330,7 +330,8 @@ function select_abonent(id, description, phone) {
 //если нет, то вызывается функция создания нового абонента и далее подключение его к палаверу.
 function add_abonent() {
      if(abonent_id == '') {
-         webix.message("No id");
+         //webix.message("");
+         new_abonent();
      } else {
     		 webix.ajax().post("palaver/" + palaver_uuid + "/abonent/" + abonent_id, {}, function(text, data) {
              if (data.json().result == false) {
@@ -342,6 +343,96 @@ function add_abonent() {
          }); 
      }
 }
+
+//-----------добавить нового абонента
+    function new_abonent() {
+
+            new_abonent_form = {
+                    view : "form", 
+                    id : "new_abonent_form", 
+                    elements : [ {view : "text", label : 'Имя', name : "fName", placeholder : "Иван"},
+                                 {view : "text", label : 'Отчество', name : "mName", placeholder : "Иванович"}, 
+                                 {view : "text", label : 'Фамилия', name : "lName", placeholder : "Рабинович"},
+                                 {view : "text", label : 'Описание', name : "description", placeholder : "дворник"}, 
+                                 {view : "text", label : 'Адрес', name : "address", placeholder : "Лондон, Тауэр"},
+                                 {view : "text", label : 'E-mail', name : "email", type: "email", placeholder : "email@fsb.ru"},
+                                 {view : "text", label : 'Телефон', name : "phone", placeholder : "13-13-13"},
+                                 {view : "button", value : "Создать", on : {
+                                     onItemClick:function(){
+                                         make_abonent();
+                                     }
+                                     }
+                    } ]
+                };
+            
+            //окно добавления нового абонента
+            webix.ui({
+                view : "window",
+                position:"center",
+                id : "new_abonent",
+                head : "<i>Абонент не найден. Создать.</i>",
+                body : {
+                    rows : [ new_abonent_form, {
+                        view : "button",
+                        id: "cancel1",
+                        label : "Отменить",
+                        click : ("$$('new_abonent').hide();")
+                    } ]
+                }
+            });
+            
+            $$('new_abonent').show();
+ 
+        
+    };
+//добавить нового абонента, продолжение
+function make_abonent() {
+        var fName = $$('new_abonent_form').getValues().fName;
+        var mName = $$('new_abonent_form').getValues().mName;
+        var lName = $$('new_abonent_form').getValues().lName;
+        var description = $$('new_abonent_form').getValues().description;
+        var address = $$('new_abonent_form').getValues().address;
+        var email = $$('new_abonent_form').getValues().email;
+        var phone = $$('new_abonent_form').getValues().phone;
+        
+        if(phone == '') {
+            webix.alert("Безобразие! Укажите хотя бы телефон!");
+            return;
+        }
+        
+    var abonent = {
+            fName: fName,
+            mName: mName,
+            lName: lName,
+            description: description,
+            address: address,
+            email: email,
+            phone: phone
+    };
+    webix.ajax().headers({"Content-type":"application/json"}).post("abonent", 
+            JSON.stringify(abonent), 
+            function(text, data) {
+        if (data.json().result == false) {
+            webix.alert(data.json().message);
+        } else {
+        
+            webix.ajax().post("palaver/" + palaver_uuid + "/abonent/" + data.json().message, {}, function(text, data) {
+             if (data.json().result == false) {
+                 webix.alert(data.json().message);
+                 update_abonent_list() 
+             } else {
+                 update_abonent_list() 
+             }
+         });
+            //select_abonent(data.json().message, fName + " " + mName + " " + lName + "(" +description +")", phone);
+            $$('new_abonent').hide();
+        }
+    });
+        
+        
+}
+//-----------------
+
 
 //обновление дерева ранее запланированных на то же время
 function update_tree() {

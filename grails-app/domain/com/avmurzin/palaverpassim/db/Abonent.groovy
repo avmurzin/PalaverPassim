@@ -27,6 +27,7 @@ class Abonent {
 	static hasMany = [phones:Phone]
 	
 	static constraints = {
-		email email: true, blank: true
+		//email email: true, blank: true
+		email blank: true
 	}
 }

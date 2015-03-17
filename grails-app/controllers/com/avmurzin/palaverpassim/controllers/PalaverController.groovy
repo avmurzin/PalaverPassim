@@ -3,6 +3,7 @@ package com.avmurzin.palaverpassim.controllers
 import com.avmurzin.palaverpassim.db.Abonent
 import com.avmurzin.palaverpassim.db.Palaver
 import com.avmurzin.palaverpassim.db.Conference
+import com.avmurzin.palaverpassim.db.Phone
 import com.avmurzin.palaverpassim.global.AbonentStatus
 import com.avmurzin.palaverpassim.global.AudioStatus;
 import com.avmurzin.palaverpassim.global.PalaverStatus
@@ -39,9 +40,52 @@ class PalaverController {
 	def createAbonent() {
 		def jsonObject = request.JSON
 		UUID uuid = UUID.randomUUID()
-		def abonent = new Abonent(jsonObject)
-		abonent.uuid = uuid
+		
+		String fName = jsonObject.getString("fName")
+		if (fName.equals("")) { fName = "<нет_данных>" }
+		
+		String mName = jsonObject.getString("mName")
+		if (mName.equals("")) { mName = "<нет_данных>" }
+		
+		String lName = jsonObject.getString("lName")
+		if (lName.equals("")) { lName = "<нет_данных>" }
+		
+		String address = jsonObject.getString("address")
+		if (address.equals("")) { address = "<нет_данных>" }
+		
+		String email = jsonObject.getString("email")
+		if (email.equals("")) { email = "email@domain.com" }
+		
+		String description = jsonObject.getString("description")
+		if (description.equals("")) { description = "<нет_данных>" }
+		
+		String phone = jsonObject.getString("phone")
+		
+		
+		if (phone.equals("") || ((phone =~ /\D/).replaceAll("").equals(""))) { 
+			render(contentType: "application/json") {
+				result = false
+				message = "Номер телефона обязателен!"
+			}
+		}
+		
+		def abonent = new Abonent( 
+			uuid: uuid,
+			fName: fName,
+            mName: mName,
+            lName: lName,
+            description: description,
+            address: address,
+            email: email);
+		
 		abonent.save(failOnError: true, flush: true)
+		
+		def telephone = new Phone(uuid: UUID.randomUUID(),
+			phoneNumber: "${phone}",
+			description: "-")
+		
+		telephone.abonent = abonent
+		telephone.save(failOnError: true, flush: true)
 
 		render(contentType: "application/json") {
 			result = true
