@@ -22,7 +22,10 @@ import org.asteriskjava.manager.ManagerConnectionState;
 import org.asteriskjava.manager.ManagerConnectionFactory;
 import org.asteriskjava.manager.ManagerEventListener
 import org.asteriskjava.manager.TimeoutException;
+import org.asteriskjava.manager.action.CommandAction
 import org.asteriskjava.manager.action.ConfbridgeKickAction
+import org.asteriskjava.manager.action.ConfbridgeListAction
+import org.asteriskjava.manager.action.ConfbridgeListRoomsAction
 import org.asteriskjava.manager.action.ConfbridgeMuteAction
 import org.asteriskjava.manager.action.ConfbridgeStartRecordAction
 import org.asteriskjava.manager.action.ConfbridgeUnmuteAction
@@ -30,13 +33,35 @@ import org.asteriskjava.manager.action.EventsAction
 import org.asteriskjava.manager.action.OriginateAction;
 import org.asteriskjava.manager.action.StatusAction
 import org.asteriskjava.manager.event.ConfbridgeJoinEvent
+import org.asteriskjava.manager.event.ConfbridgeListEvent
+import org.asteriskjava.manager.event.ConfbridgeListRoomsEvent
 import org.asteriskjava.manager.event.ConfbridgeStartEvent
 import org.asteriskjava.manager.event.HangupEvent
 import org.asteriskjava.manager.event.ManagerEvent;
 import org.asteriskjava.manager.event.OriginateResponseEvent;
+import org.asteriskjava.manager.response.CommandResponse
 import org.asteriskjava.manager.response.ManagerResponse;
 
 class AsteriskMachine implements CallMachine, ManagerEventListener {
+
+	private boolean isEvent = false;
+	private UUID eventUuid = UUID.randomUUID();
+	
+	public void setIsEvent(boolean isEvent) {
+		this.isEvent = isEvent;
+	}
+	
+	public boolean getIsEvent() {
+		return this.isEvent;
+	}
+	
+	public void setEventUuid(UUID eventUuid) {
+		this.eventUuid = eventUuid;
+	}
+	
+	public UUID getEventUuid() {
+		return this.eventUuid;
+	}
 
 	def config = new ConfigSlurper().parse(new File('ConfigSlurper/palaverpassim.conf').toURI().toURL())
 	ManagerConnectionFactory factory = new ManagerConnectionFactory(
@@ -86,23 +111,23 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 
 		// connect to Asterisk and log in
 		if(managerConnection.getState() != ManagerConnectionState.CONNECTED) {
-			
+
 			try {
 				managerConnection.login("on");
 			} catch (Exception e) {
 				return false;
 			}
-			
+
 		}
-		
+
 		//проверить есть ли палавер в запущенных, создать если нет.
 		if(roomMap.get(palaver.uuid) == null) {
 			room = new Room();
 			room.uuid = palaver.uuid;
 			roomMap.put(palaver.uuid, room);
-			
+
 			println "Палавера нет, создали новый. В комнате ${room.member.size()} абонентов"
-			
+
 			//изменить время начала на фактическое
 			Calendar calendar = new GregorianCalendar();
 			long nowTime = calendar.getTimeInMillis() / 1000;
@@ -121,11 +146,16 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 			member.uuid = abonent.uuid;
 			//TODO: расширенные правила набора и проверки номера(?)
 			member.phone = (abonent.phones.find().phoneNumber =~ /\D/).replaceAll("");
+
+			if(member.phone ==~ /^[^09]\d{6,}/) {
+				member.phone = "9${member.phone}"
+			}
+
 			member.actionId = member.uuid.toString();
 			room.member.put(abonent.uuid, member);
-			
+
 			println "Абонента еще нет, создаем. В комнате ${room.member.size()} абонентов"
-			
+
 		} else {
 			member = room.member.get(abonent.uuid);
 
@@ -137,12 +167,14 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 		if(!member.abonentStatus.equals(AbonentStatus.CONNECTED)) {
 			originateAction = new OriginateAction();
 
-			//TODO: процедура выбора канала в зависимости от номера.
-			if(member.phone ==~ /^1[3498]\d+/) {
-				channel = "SIP/as5350gw/${member.phone}";
-			} else {
-				channel = "SIP/as5350gw/${member.phone}";
-			}
+			//channel = "SIP/as5350gw/${member.phone}";
+			channel = "Local/${member.phone}@outgoing/n";
+
+			//			if(member.phone ==~ /^1[3498]\d+/) {
+			//				channel = "SIP/as5350gw/${member.phone}";
+			//			} else {
+			//				channel = "SIP/as5350gw/${member.phone}";
+			//			}
 			//channel = "${config.asterisk.channel}/${member.phone}@${config.asterisk.context}"
 			//			for (i in 0..config.channelRules.rules.size() - 1) {
 			//				if("9513559" ==~ config.channelRules.rules[i].regex) {
@@ -312,100 +344,10 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 		return null;
 	}
 
+	//TODO: Удалить
 	public void test() {
-		for (i in 0..config.channelRules.rules.size() - 1) {
-			println "${config.channelRules.rules[i].regex}"
-			if("9513559" ==~ "${config.channelRules.rules[i].regex}") {
-				println config.channelRules.rules[i].channel
-			}
-		}
-		//def config = new ConfigSlurper().parse(new File('ConfigSlurper/palaverpassim.conf').toURI().toURL())
-
-		//ManagerConnection managerConnection;
-		//		ManagerConnectionFactory factory = new ManagerConnectionFactory(
-		//				"${config.asterisk.host}", "${config.asterisk.login}", "${config.asterisk.password}");
-		//
-		//		managerConnection = factory.createManagerConnection();
-
-		//		OriginateAction originateAction;
-		//		StatusAction statusAction;
-		//		EventsAction eventsAction;
-		//		ManagerResponse originateResponse;
-		//
-		//		originateAction = new OriginateAction();
-		//		originateAction.setChannel("SIP/as5350gw/989086467383");
-		//		originateAction.setContext("conference");
-		//		originateAction.setExten("2911");
-		//		originateAction.setCallerId("2911");
-		//		originateAction.setPriority(new Integer(1));
-		//		originateAction.setTimeout(new Long(30000));
-		//		originateAction.setActionId("989086467383");
-		//		originateAction.setAsync(true);
-		//
-		//		eventsAction = new EventsAction();
-		//		eventsAction.setEventMask("on");
-		//
-		////		managerConnection.addEventListener(this);
-		//
-		//		// connect to Asterisk and log in
-		//		if(managerConnection.getState() != ManagerConnectionState.CONNECTED) {
-		//			managerConnection.login("on");
-		//		}
-		//
-		//
-		//		originateResponse = managerConnection.sendAction(eventsAction, 30000);
-		//		println("My message_0: " + "${originateResponse.getResponse()} (${originateResponse.getMessage()}) (${originateResponse.getActionId()})");
-		//
-		//
-		//		// send the originate action and wait for a maximum of 30 seconds for Asterisk
-		//		// to send a reply
-		//		originateResponse = managerConnection.sendAction(originateAction, 30000);
-		//
-		//		originateAction.setChannel("SIP/as5350gw/9513559");
-		//		originateAction.setContext("conference");
-		//		originateAction.setExten("2911");
-		//		originateAction.setCallerId("2911");
-		//		originateAction.setPriority(new Integer(1));
-		//		originateAction.setTimeout(new Long(30000));
-		//		originateAction.setActionId("9513559");
-		//		originateAction.setAsync(true);
-		//
-		//		originateResponse = managerConnection.sendAction(originateAction, 30000);
-		//
-		//		originateAction.setChannel("SIP/as5350gw/989086467381");
-		//		originateAction.setContext("conference");
-		//		originateAction.setExten("2911");
-		//		originateAction.setCallerId("2911");
-		//		originateAction.setPriority(new Integer(1));
-		//		originateAction.setTimeout(new Long(30000));
-		//		originateAction.setActionId("989086467381");
-		//		originateAction.setAsync(true);
-		//
-		//		originateResponse = managerConnection.sendAction(originateAction, 30000);
-
-		//	   originateAction = new OriginateAction();
-		//	   originateAction.setChannel("SIP/as5350gw/989086467383");
-		//	   originateAction.setContext("conference");
-		//	   originateAction.setExten("2911");
-		//	   originateAction.setPriority(new Integer(1));
-		//	   originateAction.setTimeout(new Long(30000));
-		//
-		//	   originateResponse = managerConnection.sendAction(originateAction, 30000);
-
-		// print out whether the originate succeeded or not
-		//		println("My message: " + "${originateResponse.getResponse()} (${originateResponse.getMessage()}) (${originateResponse.getActionId()})");
-		//
-		//		statusAction = new StatusAction();
-		//
-		//		originateResponse = managerConnection.sendAction(statusAction, 30000);
-		//		println("My message_2: " + "${originateResponse.getResponse()} (${originateResponse.getMessage()}) (${originateResponse.getEventList()})");
-		// and finally log off and disconnect
-
-		//Thread.sleep(10000);
-
-		//managerConnection.logoff();
-
-
+		//getConfbridgeList();
+		getConfbridgeAbonentList("2900");
 	}
 
 	/**
@@ -416,7 +358,7 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 	public boolean clearPalaver(Palaver palaver) {
 		return clearPalaver(palaver.uuid);
 	}
-	
+
 	public boolean clearPalaver(UUID uuid) {
 		Room room;
 		//Member member;
@@ -431,7 +373,7 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 				return false;
 			}
 		}
-		
+
 		//проверить есть ли палавер в запущенных. Если есть, кикнуть всех абонентов.
 		if(roomMap.get(uuid) != null) {
 			room = roomMap.get(uuid);
@@ -453,7 +395,7 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 		}
 		return true;
 	}
-	
+
 	/**
 	 * Получить список всех активных в текущий момент палаверов.
 	 * @return List<Palaver>
@@ -468,7 +410,47 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 		}
 		return palaverList;
 	}
-	
+
+	/**
+	 * Запросить перечень конф-бриджей.
+	 */
+	public void getConfbridgeList() {
+		ConfbridgeListRoomsAction confbridgeListRoomsAction;
+		ManagerResponse originateResponse;
+
+		// connect to Asterisk and log in
+		if(managerConnection.getState() != ManagerConnectionState.CONNECTED) {
+			try {
+				managerConnection.login("on");
+			} catch (Exception e) {
+				return;
+			}
+		}
+		confbridgeListRoomsAction = new ConfbridgeListRoomsAction();
+		originateResponse = managerConnection.sendAction(confbridgeListRoomsAction, 30000);
+	}
+
+	/**
+	 * Запросить перечень абонентов конктретного конф-бриджа.
+	 */
+	public void getConfbridgeAbonentList(String conferenceID) {
+		ConfbridgeListAction confbridgeListAction;
+		ManagerResponse originateResponse;
+		//
+		// connect to Asterisk and log in
+		if(managerConnection.getState() != ManagerConnectionState.CONNECTED) {
+			try {
+				managerConnection.login("on");
+			} catch (Exception e) {
+				return;
+			}
+		}
+
+		//println "getConfbridgeAbonentList - " + conferenceID;
+		confbridgeListAction = new ConfbridgeListAction(conferenceID);
+		originateResponse = managerConnection.sendAction(confbridgeListAction, 30000);
+	}
+
 	/**
 	 * Реакция на события.
 	 */
@@ -479,8 +461,27 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 		String conference;
 		Member member;
 
-		//		println event;
+
+
 		String event_name = event.getClass().getSimpleName();
+
+		if (!event_name.equals("RtcpSentEvent") && !event_name.equals("RtcpReceivedEvent")) {
+			println event;
+		}
+
+		//		if (event_name.equals("ConfbridgeListRoomsEvent")) {
+		//			//println event;
+		//			ConfbridgeListRoomsEvent listRoomEvent = (ConfbridgeListRoomsEvent) event;
+		//			String conferenceId = listRoomEvent.getConference();
+		//			println "BridgeID = " + conferenceId;
+		//			for(int i = 1; listRoomEvent.getParties(); i++) {
+		//			}
+		//		}
+
+		if (event_name.equals("ConfbridgeListEvent")) {
+			ConfbridgeListEvent listEvent = (ConfbridgeListEvent) event;
+			isEvent = true;
+		}
 
 		if (event_name.equals("OriginateResponseEvent")) {
 			println event;
@@ -507,7 +508,7 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 						if(room.member.size() == 0) {
 							clearPalaver(room.getUuid())
 						}
-						
+
 					}
 				}
 			}
@@ -522,7 +523,7 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 				for (Member abonent : room.member.values()) {
 					if(abonent.channel.equals(channel)) {
 						room.member.remove(abonent.uuid);
-						
+
 						println "Абонент ${abonent.phone} отключен, удаляется. В комнате ${room.member.size()} абонентов"
 						//и если абонент был последний, то всё почистить
 						if(room.member.size() == 0) {

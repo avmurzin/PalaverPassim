@@ -128,7 +128,7 @@ function template_properties(id) {
 
 function update_tree() {
     $$("template_tree").clearAll();
-    webix.ajax("interface/template", function(text, data) {
+    webix.ajax("interface/template?edit=true", function(text, data) {
         $$("template_tree").parse(data.json());
         $$("template_tree").openAll();
         $$("template_tree").refresh();

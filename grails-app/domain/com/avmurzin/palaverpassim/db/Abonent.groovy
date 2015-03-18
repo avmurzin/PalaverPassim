@@ -17,9 +17,9 @@ class Abonent {
 		table "abonent";
 		uuid column: "uuid", length: 16;
 		description column: "description", length: 400, defaultValue: 'абонент';
-		fName column: "fName", length: 50, defaultValue: 'Имя';
-		mName column: "mName", length: 50, defaultValue: 'Отчество';
-		lName column: "lName", length: 50, defaultValue: 'Фамилия';
+		fName column: "fName", length: 200, defaultValue: 'Имя';
+		mName column: "mName", length: 200, defaultValue: 'Отчество';
+		lName column: "lName", length: 200, defaultValue: 'Фамилия';
 		address column: "address", length: 400, defaultValue: 'адрес';
 		email column: "email";
 	}

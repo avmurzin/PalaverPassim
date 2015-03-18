@@ -175,7 +175,7 @@ var create_palaver = {
 		view:"form", id: "palaver_form", scroll:false, elements:[
                                       { view:"text", label:"Описание", name:"description", value:"Новая встреча", width:400},
                                       {view:"select", id:"conference_select", name:"conference" ,label:"Комната", options:"conference", labelAlign: 'left'},
-                                      {view:"select", id:"type_select", name:"type" ,label:"Тип", value: "TEMPLATE", options: [{id:"TEMPLATE", value: "Шаблон"}, {id:"PREPARED", value: "Стандартные мероприятия"}], labelAlign: 'left', on:{
+                                      {view:"select", id:"type_select", name:"type" ,label:"Тип", value: "TEMPLATE", options: [{id:"TEMPLATE", value: "Шаблон"}, {id:"PREPARED", value: "Стандартные мероприятия"}, {id:"EVENT", value: "Запуск по событию"}], labelAlign: 'left', on:{
                                           onChange:function(){
                                              
                                           }

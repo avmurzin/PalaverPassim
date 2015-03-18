@@ -77,6 +77,10 @@ class UrlMappings {
 		"/abonent/findByPhone/$phone"(controller: "palaver", action: "findAbonentByPhone", method: "GET")
 		"/abonent/findByText/$text"(controller: "palaver", action: "findAbonentByText", method: "GET")
 		
+		//экспорт справочника абонентов
+		//&fileName=
+		"/abonent/file"(controller: "palaver", action: "exportAbonent", method: "GET")
+		
 		//TODO: удалить. Получить все uuid палаверов
 		"/palaver/uuid"(controller: "palaver", action: "getAllPalaverUuid", method: "GET")
 		

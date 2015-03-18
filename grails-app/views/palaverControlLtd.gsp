@@ -463,13 +463,7 @@ function make_abonent() {
 //-----------------
 
 function go_back() {
-    webix.ajax().del("palaver/" + palaverUuid, {}, function(text, data) {
-        if (data.json().result == false) {
-            webix.alert(data.json().message);
-        } else {
-            window.history.back(); 
-        }
-    }); 
+    window.history.back(); 
 }
 
 

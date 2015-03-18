@@ -435,9 +435,24 @@ class PalaverController {
 	 * @return
 	 */
 	def getPalaverTemplates() {
+		
+		boolean edit = false
+		
+		try {
+			if (params.edit.equals("true")) {
+				edit = true
+			}
+		} catch (Exception e) {
+
+		}
+		
 		def section = ["${PalaverType.PREPARED.toString()}" : "${PalaverType.PREPARED.getDescription()}",
 			"${PalaverType.TEMPLATE.toString()}" : "${PalaverType.TEMPLATE.getDescription()}"]
-		//println section.keySet()
+		
+		if(edit) {
+			section << ["${PalaverType.EVENT.toString()}" : "${PalaverType.EVENT.getDescription()}"]
+		}
+		
 		def tree = []
 		def data = []
 
@@ -603,6 +618,42 @@ class PalaverController {
 		}
 	}
 
+	def exportAbonent() {
+		String fileName = params.fileName;
+		try {
+			def csv = new File(fileName)
+			csv.splitEachLine(';') { row ->
+				def	abonent = new Abonent(
+						uuid: UUID.randomUUID(),
+						lName: "${row[0].take(50)}" ?: "-",
+						fName: "${row[1].take(50)}" ?: "-",
+						mName: "${row[2].take(50)}" ?: "-",
+						description: "${row[3].take(400)}" ?: "-",
+						address: "${row[4]}, ${row[5]}" ?: "-",
+						email: "no_data"
+						)
+				abonent.save(failOnError: true, flush: true)
+				
+				def phone = new Phone(uuid: UUID.randomUUID(),
+					phoneNumber: "${row[6]}" ?: "-",
+					description: "рабочий")
+					phone.abonent = abonent
+					phone.save(failOnError: true, flush: true)
+				
+			}
+			render(contentType: "application/json") {
+				result = true
+				message = "Exported"
+			}
+		} catch (Exception e) {
+			render(contentType: "application/json") {
+				result = false
+				message = "Error open file"
+			}
+		}
+
+	}
+	
 	//TODO: удалить
 	def getAllPalaverUuid() {
 		def palavers = Palaver.findAll()
