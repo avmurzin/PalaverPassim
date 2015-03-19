@@ -16,11 +16,11 @@ class Abonent {
 	static mapping = {
 		table "abonent";
 		uuid column: "uuid", length: 16;
-		description column: "description", length: 400, defaultValue: 'абонент';
-		fName column: "fName", length: 200, defaultValue: 'Имя';
-		mName column: "mName", length: 200, defaultValue: 'Отчество';
-		lName column: "lName", length: 200, defaultValue: 'Фамилия';
-		address column: "address", length: 400, defaultValue: 'адрес';
+		description column: "description", length: 400;
+		fName column: "fName", length: 200;
+		mName column: "mName", length: 200;
+		lName column: "lName", length: 200;
+		address column: "address", length: 400;
 		email column: "email";
 	}
 	

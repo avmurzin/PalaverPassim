@@ -11,6 +11,10 @@ class SchedulerJob {
 	
 	private final AsteriskMachine callMachine = (AsteriskMachine) AsteriskMachine.getInstance();
 	private final UiManipulation uiManipulation = UiManipulation.getInstance();
+	
+	Palaver eventPalaver;
+	Palaver palaver;
+	UUID newUuid;
 
 	static triggers = {
 		//cron name: 'myTrigger', cronExpression: "0/5 * * * * ?"
@@ -20,10 +24,10 @@ class SchedulerJob {
 	def description = "PalaverPasim repeat"
 	def execute(){
 		if(callMachine.getIsEvent()) {
-			Palaver eventPalaver = Palaver.findByUuid(callMachine.getEventUuid());
+			eventPalaver = Palaver.findByUuid(callMachine.getEventUuid());
 			if((eventPalaver == null) || (!callMachine.getActivePalaver().contains(eventPalaver))) {
-				Palaver palaver = Palaver.findByPalaverType(PalaverType.EVENT.toString());
-				UUID newUuid = uiManipulation.copyPalaver(palaver.uuid);
+				palaver = Palaver.findByPalaverType(PalaverType.EVENT.toString());
+				newUuid = uiManipulation.copyPalaver(palaver.uuid);
 				callMachine.setEventUuid(newUuid);
 				uiManipulation.startPalaver(newUuid, Mode.MANUAL);
 				
@@ -31,6 +35,10 @@ class SchedulerJob {
 			callMachine.setIsEvent(false);
 		}
 		callMachine.getConfbridgeAbonentList(conference);
+		
+		eventPalaver = null;
+		palaver = null;
+		newUuid = null;
 	}
 
 }
