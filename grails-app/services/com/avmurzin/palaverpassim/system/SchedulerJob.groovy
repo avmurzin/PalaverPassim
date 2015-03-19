@@ -23,6 +23,7 @@ class SchedulerJob {
 	def group = "PalaverPassim"
 	def description = "PalaverPasim repeat"
 	def execute(){
+		//обработка событий в сигнальной конференции
 		if(callMachine.getIsEvent()) {
 			eventPalaver = Palaver.findByUuid(callMachine.getEventUuid());
 			if((eventPalaver == null) || (!callMachine.getActivePalaver().contains(eventPalaver))) {
@@ -39,6 +40,7 @@ class SchedulerJob {
 		eventPalaver = null;
 		palaver = null;
 		newUuid = null;
+		
 	}
 
 }
