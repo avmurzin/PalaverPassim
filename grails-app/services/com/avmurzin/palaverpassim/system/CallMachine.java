@@ -1,6 +1,8 @@
 package com.avmurzin.palaverpassim.system;
 
 import java.util.List;
+import java.util.UUID;
+
 import com.avmurzin.palaverpassim.db.Abonent;
 import com.avmurzin.palaverpassim.db.Conference;
 import com.avmurzin.palaverpassim.db.Palaver;
@@ -154,6 +156,37 @@ public interface CallMachine {
 	 * @return List<Palaver>
 	 */
 	List<Palaver> getActivePalaver();
+	
+	/**
+	 * Установить наличие события активации сигнальной конференции (для запуска по событию переадресации).
+	 * @param isEvent
+	 */
+	public void setIsEvent(boolean isEvent);
+	
+	/**
+	 * Проверить наличие события активации сигнальной конференции (для запуска по событию переадресации).
+	 * @return
+	 */
+	public boolean getIsEvent();
+	
+	/**
+	 * Установить переменную для хранения идентификатора сигнальной конференции.
+	 * @param eventUuid
+	 */
+	public void setEventUuid(UUID eventUuid);
+	
+	/**
+	 * Получить переменную для хранения идентификатора сигнальной конференции.
+	 * @return
+	 */
+	public UUID getEventUuid();
+	
+	/**
+	 * Активировать генерацию событий с перечнем членов конференции (сам метод)
+	 * ничего не возвращает, перечень абонентов передается в евентах.
+	 * @param conferenceID строка-идентификатор конференц-бриджа.
+	 */
+	public void getConfbridgeAbonentList(String conferenceID);
 	
 	/**
 	 * Получить список телефонов, которыми абонент подключен к палаверу.

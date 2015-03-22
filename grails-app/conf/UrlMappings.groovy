@@ -81,6 +81,12 @@ class UrlMappings {
 		//&fileName=
 		"/abonent/file"(controller: "palaver", action: "exportAbonent", method: "GET")
 		
+		//проверка расписания (редко)
+		"/palaver/checkTimeline"(controller: "palaver", action: "checkTimeline", method: "GET")
+		
+		//проверка сигнальной конференции (часто)
+		"/palaver/checkEvent"(controller: "palaver", action: "checkEvent", method: "GET")
+		
 		//TODO: удалить. Получить все uuid палаверов
 		"/palaver/uuid"(controller: "palaver", action: "getAllPalaverUuid", method: "GET")
 		

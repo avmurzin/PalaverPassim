@@ -1,5 +1,6 @@
 package com.avmurzin.palaverpassim.ui
 
+import java.util.UUID;
 import com.avmurzin.palaverpassim.db.Abonent
 import com.avmurzin.palaverpassim.db.Conference
 import com.avmurzin.palaverpassim.db.Palaver
@@ -10,6 +11,7 @@ import com.avmurzin.palaverpassim.global.AudioStatus;
 import com.avmurzin.palaverpassim.global.PalaverType;
 import com.avmurzin.palaverpassim.system.CallMachine
 import com.avmurzin.palaverpassim.system.AsteriskMachine
+import java.util.Calendar;
 
 class UiManipulation {
 	public static final UiManipulation INSTANCE = new UiManipulation();
@@ -174,6 +176,75 @@ class UiManipulation {
 		return callMachine.getActivePalaver().contains(palaver)
 		//TODO: проверить попадает ли текущее время в период проведения встречи
 		//
+	}
+	
+
+	/**
+	 * Проверка активации сигнальной конференции и запуск палавера.
+	 * @return
+	 */
+	public ReturnMessage checkEvent() {
+		def config = new ConfigSlurper().parse(new File('ConfigSlurper/palaverpassim.conf').toURI().toURL());
+		String conference = "${config.palaverpassim.eventconference}"
+		
+		ReturnMessage returnMessage = new ReturnMessage(result: true, message: "");
+
+		Palaver eventPalaver;
+		Palaver palaver;
+		UUID newUuid;
+
+		//обработка событий в сигнальной конференции
+		if(callMachine.getIsEvent()) {
+			eventPalaver = Palaver.findByUuid(callMachine.getEventUuid());
+			if((eventPalaver == null) || (!callMachine.getActivePalaver().contains(eventPalaver))) {
+				palaver = Palaver.findByPalaverType(PalaverType.EVENT.toString());
+				newUuid = copyPalaver(palaver.uuid);
+				callMachine.setEventUuid(newUuid);
+				returnMessage = startPalaver(newUuid, Mode.MANUAL);
+			}
+			callMachine.setIsEvent(false);
+		}
+		callMachine.getConfbridgeAbonentList(conference);
+
+		eventPalaver = null;
+		palaver = null;
+		newUuid = null;
+		
+		return returnMessage;
+
+	}
+	
+	/**
+	 * Проверка расписания, запуск/останов палавера, если наступило время.
+	 * @return
+	 */
+	public ReturnMessage checkTimeline() {
+		ReturnMessage returnMessage = new ReturnMessage(result: true, message: "");
+		def timelinePalavers;
+		Calendar calendar;
+		long nowTime;
+		calendar = new GregorianCalendar();
+		nowTime = calendar.getTimeInMillis() / 1000;
+
+		//запуск палаверов по расписанию
+		timelinePalavers = Palaver.findAll("from Palaver as p where p.startTimestamp <= ? and stopTimestamp >= ?", [nowTime, nowTime]);
+
+		for(Palaver palaver : timelinePalavers) {
+			if(!callMachine.getActivePalaver().contains(palaver)) {
+				returnMessage = startPalaver(palaver.uuid, Mode.MANUAL);
+			}
+		}
+
+		for(Palaver palaver : callMachine.getActivePalaver()) {
+			if((palaver.stopTimestamp <= nowTime) && (palaver.stopTimestamp != 0)) {
+				stopPalaver(palaver.uuid, Mode.MANUAL);
+			}
+		}
+
+		timelinePalavers = null;
+		calendar = null;
+		//nowTime = null;
+		return returnMessage;
 	}
 	
 	/**

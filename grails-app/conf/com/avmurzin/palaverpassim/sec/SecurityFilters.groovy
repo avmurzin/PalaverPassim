@@ -5,15 +5,21 @@ package com.avmurzin.palaverpassim.sec
  * via access control by convention.
  */
 class SecurityFilters {
-    def filters = {
-        all(uri: "/**") {
-            before = {
-                // Ignore direct views (e.g. the default main index page).
-                if (!controllerName) return true
+	def filters = {
+		all(uri: "/**") {
+			before = {
+				// Ignore direct views (e.g. the default main index page).
+				if (!controllerName) return true
 
-                // Access control by convention.
-                accessControl()
-            }
-        }
-    }
+				if ((controllerName+':'+actionName) in ['palaver:checkEvent', 'palaver:checkTimeline']) {
+					return true
+				} else {
+					accessControl()
+				}
+
+				// Access control by convention.
+				//accessControl()
+			}
+		}
+	}
 }

@@ -654,6 +654,26 @@ class PalaverController {
 
 	}
 	
+	/**
+	 * Проверка расписания и запуск/останов палавера, если наступило время.
+	 * @return
+	 */
+	def checkTimeline() {
+		render(contentType: "application/json") {
+			result = uiManipulation.checkTimeline().result;
+		}
+	}
+	
+	/**
+	 * Проверка сигнальной конферецнии и запуск палавера, если появился абонент.
+	 * @return
+	 */
+	def checkEvent() {
+		render(contentType: "application/json") {
+			result = uiManipulation.checkEvent().result;
+		}
+	}
+	
 	//TODO: удалить
 	def getAllPalaverUuid() {
 		def palavers = Palaver.findAll()
