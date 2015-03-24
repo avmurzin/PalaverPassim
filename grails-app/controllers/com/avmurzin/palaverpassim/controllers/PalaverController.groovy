@@ -18,6 +18,8 @@ import java.text.SimpleDateFormat
 import java.util.UUID;
 
 class PalaverController {
+	
+	static scope = "singleton"
 
 	private final UiManipulation uiManipulation = UiManipulation.getInstance();
 	private final CallMachine callMachine = AsteriskMachine.getInstance();
@@ -216,6 +218,20 @@ class PalaverController {
 			message = returnMessage.message
 		}
 	}
+	
+	def secretStartPalaver() {
+//		//UUID uuid = UUID.fromString(params.uuid);
+//
+//
+//
+//
+//		ReturnMessage returnMessage = uiManipulation.startPalaver(uiManipulation.copyPalaver(Palaver.findByPalaverType(PalaverType.EVENT.toString()).uuid), Mode.MANUAL);
+//
+//		render(contentType: "application/json") {
+//			result = returnMessage.result
+//			message = returnMessage.message
+//		}
+	}
 
 	/**
 	 * Остановить сессию в произвольное время (по команде).
@@ -402,6 +418,25 @@ class PalaverController {
 		def abonent = Abonent.findByUuid(uuid);
 
 		ReturnMessage returnMessage = uiManipulation.addAbonentToPalaver(abonent, palaver);
+
+		render(contentType: "application/json") {
+			result = returnMessage.result
+			message = returnMessage.message
+		}
+	}
+	
+	/**
+	 * Удалить абонента из палавера.
+	 * /palaver/$palaveruuid/abonent/$uuid (DELETE)
+	 * @return
+	 */
+	def delAbonentFromPalaver() {
+		UUID uuid = UUID.fromString(params.uuid);
+		UUID palaveruuid = UUID.fromString(params.palaveruuid);
+		def palaver = Palaver.findByUuid(palaveruuid);
+		def abonent = Abonent.findByUuid(uuid);
+
+		ReturnMessage returnMessage = uiManipulation.delAbonentFromPalaver(abonent, palaver);
 
 		render(contentType: "application/json") {
 			result = returnMessage.result

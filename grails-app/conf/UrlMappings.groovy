@@ -33,6 +33,9 @@ class UrlMappings {
 		//запустить сессию (начать обзвон по списку абонентов)
 		"/palaver/$uuid/start"(controller: "palaver", action: "startPalaver", method: "POST")
 		
+		//запустить сессию (начать обзвон по списку абонентов) без авторизации
+		"/palaver/$uuid/secretstart"(controller: "palaver", action: "secretStartPalaver", method: "POST")
+		
 		//остановить сессию (отключить по списку абонентов)
 		"/palaver/$uuid/stop"(controller: "palaver", action: "stopPalaver", method: "POST")
 		
@@ -60,6 +63,9 @@ class UrlMappings {
 		
 		//добавить абонента к палаверу
 		"/palaver/$palaveruuid/abonent/$uuid"(controller: "palaver", action: "addAbonentToPalaver", method: "POST")
+		
+		//удалить абонента из палавера
+		"/palaver/$palaveruuid/abonent/$uuid"(controller: "palaver", action: "delAbonentFromPalaver", method: "DELETE")
 		
 		//подключить абонента к палаверу
 		"/palaver/$palaveruuid/abonent/$uuid/connect"(controller: "palaver", action: "connectAbonentToPalaver", method: "GET")

@@ -189,6 +189,11 @@ public interface CallMachine {
 	public void getConfbridgeAbonentList(String conferenceID);
 	
 	/**
+	 * Проверить коннект к серверу телефонии (восстановить, если нет).
+	 */
+	public boolean checkCallMachineConnect();
+	
+	/**
 	 * Получить список телефонов, которыми абонент подключен к палаверу.
 	 * @param abonent
 	 * @param palaver

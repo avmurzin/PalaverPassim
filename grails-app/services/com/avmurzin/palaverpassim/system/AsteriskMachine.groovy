@@ -8,9 +8,10 @@ import com.avmurzin.palaverpassim.db.Palaver;
 import com.avmurzin.palaverpassim.db.Phone;
 import com.avmurzin.palaverpassim.global.AbonentStatus;
 import com.avmurzin.palaverpassim.global.AudioStatus;
-
+import com.avmurzin.palaverpassim.ui.UiManipulation;
+import com.avmurzin.palaverpassim.global.PalaverType;
 import java.io.IOException;
-
+import com.avmurzin.palaverpassim.global.Mode
 import org.asteriskjava.live.AsteriskChannel
 import org.asteriskjava.live.AsteriskQueue
 import org.asteriskjava.live.AsteriskServer
@@ -46,19 +47,19 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 
 	private boolean isEvent = false;
 	private UUID eventUuid = UUID.randomUUID();
-	
+
 	public void setIsEvent(boolean isEvent) {
 		this.isEvent = isEvent;
 	}
-	
+
 	public boolean getIsEvent() {
 		return this.isEvent;
 	}
-	
+
 	public void setEventUuid(UUID eventUuid) {
 		this.eventUuid = eventUuid;
 	}
-	
+
 	public UUID getEventUuid() {
 		return this.eventUuid;
 	}
@@ -452,6 +453,21 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 	}
 
 	/**
+	 * 
+	 * @return
+	 */
+	public boolean checkCallMachineConnect() {
+		// connect to Asterisk and log in
+		if(managerConnection.getState() != ManagerConnectionState.CONNECTED) {
+			try {
+				managerConnection.login("on");
+			} catch (Exception e) {
+				return false;
+			}
+		}
+	}
+
+	/**
 	 * Реакция на события.
 	 */
 	@Override
@@ -460,8 +476,6 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 		String channel;
 		String conference;
 		Member member;
-
-
 
 		String event_name = event.getClass().getSimpleName();
 
@@ -480,7 +494,7 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 
 		if (event_name.equals("ConfbridgeListEvent")) {
 			ConfbridgeListEvent listEvent = (ConfbridgeListEvent) event;
-			isEvent = true;
+			//isEvent = true;
 		}
 
 		if (event_name.equals("OriginateResponseEvent")) {
@@ -550,8 +564,15 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 		}
 
 		if(event_name.equals("ConfbridgeStartEvent")) {
-			println event;
+			UiManipulation uiManipulation = UiManipulation.getInstance();
 			ConfbridgeStartEvent cbsEvent = (ConfbridgeStartEvent) event;
+
+			if(cbsEvent.getConference() == "${config.palaverpassim.eventconference}") {
+				println "Event - ${config.palaverpassim.eventconference}"
+				//isEvent = true;
+//				ExecuteCommand.execute("${config.palaverpassim.eventscript}");
+//				ExecuteCommand.execute("${config.palaverpassim.eventpalaver}");
+			}
 
 			//ConfbridgeStartRecordAction confbridgeStartRecordAction = new ConfbridgeStartRecordAction(cbsEvent.getConference());
 			//managerConnection.sendAction(confbridgeStartRecordAction, 30000);

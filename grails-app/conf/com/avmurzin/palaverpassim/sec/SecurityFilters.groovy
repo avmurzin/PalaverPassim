@@ -11,7 +11,7 @@ class SecurityFilters {
 				// Ignore direct views (e.g. the default main index page).
 				if (!controllerName) return true
 
-				if ((controllerName+':'+actionName) in ['palaver:checkEvent', 'palaver:checkTimeline']) {
+				if ((controllerName+':'+actionName) in ['palaver:checkEvent', 'palaver:checkTimeline', 'palaver:secretStartPalaver']) {
 					return true
 				} else {
 					accessControl()

@@ -129,8 +129,15 @@ var container_tree = {
 var abonent_list = {
         view: "list",
         id: "abonent_list",
-        template: "<strong>#description#</strong>",
+        template: "<strong>#description#</strong> <span class='info'>Удалить</span> ",
        select:false,
+       onClick:{
+                info:function(e, id){
+                    //webix.message(this.getItem(id).username + "/" + this.getItem(id).role);
+                    del_user(this.getItem(id).uuid);
+                    return false;
+                }
+            },
         data:[]
 }
 
@@ -396,6 +403,19 @@ function make_abonent() {
         
 }
 //-----------------
+
+//удаление юзера из палавера
+
+function del_user(uuid) {
+webix.ajax().del("palaver/" + palaver_uuid + "/abonent/" + uuid, {}, function(text, data) {
+             if (data.json().result == false) {
+                 webix.alert(data.json().message);
+                 update_abonent_list() 
+             } else {
+                 update_abonent_list() 
+             }
+         });
+}
 
 //обновление дерева ранее запланированных на то же время
 function update_tree() {

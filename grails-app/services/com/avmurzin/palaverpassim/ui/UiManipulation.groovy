@@ -9,8 +9,9 @@ import com.avmurzin.palaverpassim.global.Mode
 import com.avmurzin.palaverpassim.global.AbonentStatus;
 import com.avmurzin.palaverpassim.global.AudioStatus;
 import com.avmurzin.palaverpassim.global.PalaverType;
-import com.avmurzin.palaverpassim.system.CallMachine
-import com.avmurzin.palaverpassim.system.AsteriskMachine
+import com.avmurzin.palaverpassim.system.CallMachine;
+import com.avmurzin.palaverpassim.system.AsteriskMachine;
+import com.avmurzin.palaverpassim.system.ExecuteCommand;
 import java.util.Calendar;
 
 class UiManipulation {
@@ -21,6 +22,8 @@ class UiManipulation {
 	}
 
 	private UiManipulation() {}
+	
+	def config = new ConfigSlurper().parse(new File('ConfigSlurper/palaverpassim.conf').toURI().toURL())
 
 	private final CallMachine callMachine = AsteriskMachine.getInstance();
 
@@ -96,19 +99,19 @@ class UiManipulation {
 	public ReturnMessage connectAbonentToPalaver(Abonent abonent, Palaver palaver) {
 
 		ReturnMessage returnMessage = new ReturnMessage()
-		
+
 		if(!palaver.abonent.contains(abonent)) {
 			palaver.abonent << abonent
 			palaver.save(failOnError: true, flush: true);
 		}
-		
+
 		returnMessage.result = callMachine.connectToConference(abonent, palaver);
 		if(!returnMessage.result) {
 			returnMessage.message = "Сервер телефонии не отвечает, обратитесь к администратору"
 		} else {
 			returnMessage.message = "Абонет подключен к конференции";
 		}
-		
+
 		return returnMessage;
 	}
 
@@ -133,7 +136,29 @@ class UiManipulation {
 
 		return returnMessage;
 	}
-		
+	
+	/**
+	 * Удалить абонента из палавера
+	 * @param abonent
+	 * @param palaver
+	 * @return
+	 */
+	public ReturnMessage delAbonentFromPalaver(Abonent abonent, Palaver palaver) {
+
+		ReturnMessage returnMessage = new ReturnMessage()
+
+		if(palaver.abonent.contains(abonent)) {
+			palaver.abonent.remove(abonent);
+			palaver.save(failOnError: true, flush: true);
+		}
+
+		returnMessage.result = true
+		returnMessage.message = "Абонет удален из конференции";
+
+
+		return returnMessage;
+	}
+
 	/**
 	 * Управление звуком абонента.
 	 * @param uuid
@@ -164,7 +189,7 @@ class UiManipulation {
 		} else {
 			returnMessage.message = "Операция выполнена успешно";
 		}
-		
+
 		return returnMessage;
 	}
 
@@ -177,43 +202,47 @@ class UiManipulation {
 		//TODO: проверить попадает ли текущее время в период проведения встречи
 		//
 	}
-	
+
 
 	/**
 	 * Проверка активации сигнальной конференции и запуск палавера.
 	 * @return
 	 */
 	public ReturnMessage checkEvent() {
-		def config = new ConfigSlurper().parse(new File('ConfigSlurper/palaverpassim.conf').toURI().toURL());
-		String conference = "${config.palaverpassim.eventconference}"
-		
+//		def config = new ConfigSlurper().parse(new File('ConfigSlurper/palaverpassim.conf').toURI().toURL());
+//		String conference = "${config.palaverpassim.eventconference}"
+//
 		ReturnMessage returnMessage = new ReturnMessage(result: true, message: "");
-
-		Palaver eventPalaver;
+//
+//		Palaver eventPalaver;
 		Palaver palaver;
 		UUID newUuid;
-
-		//обработка событий в сигнальной конференции
-		if(callMachine.getIsEvent()) {
-			eventPalaver = Palaver.findByUuid(callMachine.getEventUuid());
-			if((eventPalaver == null) || (!callMachine.getActivePalaver().contains(eventPalaver))) {
-				palaver = Palaver.findByPalaverType(PalaverType.EVENT.toString());
-				newUuid = copyPalaver(palaver.uuid);
-				callMachine.setEventUuid(newUuid);
-				returnMessage = startPalaver(newUuid, Mode.MANUAL);
-			}
-			callMachine.setIsEvent(false);
-		}
-		callMachine.getConfbridgeAbonentList(conference);
-
-		eventPalaver = null;
+//		//обработка событий в сигнальной конференции
+//		//		if(callMachine.getIsEvent()) {
+//		if(true) {
+//			eventPalaver = Palaver.findByUuid(callMachine.getEventUuid());
+//			if((eventPalaver == null) || (!callMachine.getActivePalaver().contains(eventPalaver))) {
+//				palaver = Palaver.findByPalaverType(PalaverType.EVENT.toString());
+//				newUuid = copyPalaver(palaver.uuid);
+//				callMachine.setEventUuid(newUuid);
+				//returnMessage = startPalaver(newUuid, Mode.MANUAL);
+//				println "${config.palaverpassim.eventpalaver} ${newUuid.toString()}"
+//				ExecuteCommand.execute("${config.palaverpassim.eventpalaver} ${newUuid.toString()}");
+//			}
+//			//			callMachine.setIsEvent(false);
+//		}
+//		//callMachine.getConfbridgeAbonentList(conference);
+//
+//		eventPalaver = null;
 		palaver = null;
 		newUuid = null;
-		
+//		config = null;
+//		conference = null;
+
 		return returnMessage;
 
 	}
-	
+
 	/**
 	 * Проверка расписания, запуск/останов палавера, если наступило время.
 	 * @return
@@ -222,9 +251,11 @@ class UiManipulation {
 		ReturnMessage returnMessage = new ReturnMessage(result: true, message: "");
 		def timelinePalavers;
 		Calendar calendar;
-		long nowTime;
+		Long nowTime;
 		calendar = new GregorianCalendar();
 		nowTime = calendar.getTimeInMillis() / 1000;
+
+		callMachine.checkCallMachineConnect();
 
 		//запуск палаверов по расписанию
 		timelinePalavers = Palaver.findAll("from Palaver as p where p.startTimestamp <= ? and stopTimestamp >= ?", [nowTime, nowTime]);
@@ -243,10 +274,10 @@ class UiManipulation {
 
 		timelinePalavers = null;
 		calendar = null;
-		//nowTime = null;
+		nowTime = null;
 		return returnMessage;
 	}
-	
+
 	/**
 	 * Клонирование палавера.
 	 * @param uuid старого палавера.
@@ -256,21 +287,20 @@ class UiManipulation {
 		Palaver originalPalaver = Palaver.findByUuid(uuid);
 		def abonent = originalPalaver.abonent.findAll();
 		def conference = originalPalaver.conference;
-		
 		Calendar calendar = new GregorianCalendar()
 		long nowTime = calendar.getTimeInMillis() / 1000
 		long hour = 3600
-		
-//		Palaver copyPalaver = new Palaver(uuid: UUID.randomUUID(), 
-//			description: "${originalPalaver.description} (клон)",
-//			startTimestamp: nowTime, stopTimestamp: nowTime + hour*2,
-//			palaverType: PalaverType.NORMAL,
-//			abonent: abonent, conference: conference);
+
+		//		Palaver copyPalaver = new Palaver(uuid: UUID.randomUUID(),
+		//			description: "${originalPalaver.description} (клон)",
+		//			startTimestamp: nowTime, stopTimestamp: nowTime + hour*2,
+		//			palaverType: PalaverType.NORMAL,
+		//			abonent: abonent, conference: conference);
 		Palaver copyPalaver = new Palaver(uuid: UUID.randomUUID(),
-			description: "${originalPalaver.description} (клон)",
-			startTimestamp: 0, stopTimestamp: 0,
-			palaverType: PalaverType.NORMAL,
-			abonent: abonent, conference: conference);
+		description: "${originalPalaver.description} (клон)",
+		startTimestamp: 0, stopTimestamp: 0,
+		palaverType: PalaverType.NORMAL,
+		abonent: abonent, conference: conference);
 		copyPalaver.save(failOnError: true, flush: true);
 		return copyPalaver.uuid;
 	}
