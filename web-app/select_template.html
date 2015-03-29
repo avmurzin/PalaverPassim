@@ -169,7 +169,25 @@ function goToPalaver() {
 	var tree_id = $$("template_tree").getSelectedId();
 	//webix.message(tree_id);
 	//window.location.href = "redirect?page=nks&uuid=" + tree_id;
-	window.location.href = "redirect?page=template&uuid=" + tree_id;
+	
+	webix.ajax("palaver/" + tree_id + "/copy", function(text, data) {
+       if(data.json().result == true) {
+    	   new_id = data.json().message;
+    	   if(palaverType == "PREPARED") {
+    		   window.location.href = "redirect?page=palaverControl&uuid=" + new_id;
+    	    }
+    	   if(palaverType == "TEMPLATE") {
+               window.location.href = "redirect?page=edit&uuid=" + new_id;
+            }
+    	      
+       } else {
+    	   webix.alert("Операция не удалась, обратитесь к администратору");
+       }
+        
+    });
+	
+	
+	//window.location.href = "redirect?page=template&uuid=" + tree_id;
     //webix.ajax("redirect?page=nks&uuid=" + tree_id, function(text, data) {
        
     //});

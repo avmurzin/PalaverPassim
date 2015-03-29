@@ -169,7 +169,7 @@ class AsteriskMachine implements CallMachine, ManagerEventListener {
 			originateAction = new OriginateAction();
 
 			//channel = "SIP/as5350gw/${member.phone}";
-			channel = "Local/${member.phone}@outgoing/n";
+			channel = "${config.asterisk.channel}/${member.phone}@${config.asterisk.context}";
 
 			//			if(member.phone ==~ /^1[3498]\d+/) {
 			//				channel = "SIP/as5350gw/${member.phone}";

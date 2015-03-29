@@ -36,6 +36,9 @@ class UrlMappings {
 		//запустить сессию (начать обзвон по списку абонентов) без авторизации
 		"/palaver/$uuid/secretstart"(controller: "palaver", action: "secretStartPalaver", method: "POST")
 		
+		//получить uuid клона палавера
+		"/palaver/$uuid/copy"(controller: "palaver", action: "copyPalaver", method: "GET")
+		
 		//остановить сессию (отключить по списку абонентов)
 		"/palaver/$uuid/stop"(controller: "palaver", action: "stopPalaver", method: "POST")
 		

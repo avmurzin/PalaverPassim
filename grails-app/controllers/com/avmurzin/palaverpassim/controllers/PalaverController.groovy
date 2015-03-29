@@ -524,12 +524,14 @@ class PalaverController {
 			if (palaver != null) {
 				//если палавер является стартуемым немедленно, то сдалать копию и перейти к странице запуска
 				if(palaver.palaverType.equals(PalaverType.PREPARED.toString())) {
-					outUuid = uiManipulation.copyPalaver(palaver.uuid)
+					//в новой версии палавер уже скопирован
+					  //outUuid = uiManipulation.copyPalaver(palaver.uuid)
 					page = "palaverControl"
 				}
 				//если палавер является шаблоном, то сдалать копию и перейти к странице редактирования
 				if(palaver.palaverType.equals(PalaverType.TEMPLATE.toString())) {
-					outUuid = uiManipulation.copyPalaver(palaver.uuid)
+					//в новой версии палавер уже скопирован
+					  //outUuid = uiManipulation.copyPalaver(palaver.uuid)
 					page = "edit"
 				}
 			}
@@ -707,6 +709,22 @@ class PalaverController {
 		render(contentType: "application/json") {
 			result = uiManipulation.checkEvent().result;
 		}
+	}
+	
+	def copyPalaver() {
+		try {
+			UUID uuid = UUID.fromString(params.uuid);
+			render(contentType: "application/json") {
+				result = true;
+				message = uiManipulation.copyPalaver(uuid).toString();
+			}
+		} catch (Exception e) {
+			render(contentType: "application/json") {
+				result = false;
+				message = "Не удалось создать копию";
+			}
+		}
+
 	}
 	
 	//TODO: удалить

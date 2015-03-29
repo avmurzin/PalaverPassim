@@ -516,6 +516,27 @@ webix.attachEvent("onReady", function(){
     $$("top_menu").hideItem("2");
     $$("top_menu").hideItem("3");
   refresh();
+  
+        webix.confirm({
+          title:"Запуск конференции",
+          ok:"Вызвать всех", 
+          cancel:"Отказаться",
+          type:"confirm-warning",
+          text:"",
+          callback:function(result){ //setting callback
+              if (result) {
+                $$("top_menu").hideItem("4");
+                start_palaver();
+              } else {
+               go_back();
+              }
+
+          }
+        });
+  
+  
+  
+  
 });
 
 function logout() {
