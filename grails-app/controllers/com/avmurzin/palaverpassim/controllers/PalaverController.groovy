@@ -519,6 +519,7 @@ class PalaverController {
 		//println "test___"
 		UUID outUuid = UUID.fromString(uuid);
 
+		//Эта ветка уже не нужна:
 		if(page.equals("template")) {
 			Palaver palaver = Palaver.findByUuid(UUID.fromString(uuid))
 			if (palaver != null) {
@@ -536,22 +537,6 @@ class PalaverController {
 				}
 			}
 		}
-		
-//		if(page.equals("edit")) {
-//			Palaver palaver = Palaver.findByUuid(UUID.fromString(uuid))
-//			if (palaver != null) {
-//				//если палавер является шаблоном, то сдалать копию и перейти к странице редактирования
-//				if(palaver.palaverType.equals(PalaverType.TEMPLATE.toString())) {
-//					outUuid = uiManipulation.copyPalaver(palaver.uuid)
-//					page = "edit"
-//				}
-//				//если палавер является нормальным, то копию не делать и перейти к странице редактирования
-//				if(palaver.palaverType.equals(PalaverType.NORMAL.toString())) {
-//					outUuid = palaver.uuid.toString()
-//					page = "edit"
-//				}
-//			}
-//		}
 
 		render(view: "/${page}", model: [uuid: outUuid])
 	}
@@ -711,6 +696,10 @@ class PalaverController {
 		}
 	}
 	
+	/**
+	 * Для принятого uuid выполнить операцию клонирования, вертуть uuid клона.
+	 * @return
+	 */
 	def copyPalaver() {
 		try {
 			UUID uuid = UUID.fromString(params.uuid);
@@ -722,6 +711,31 @@ class PalaverController {
 			render(contentType: "application/json") {
 				result = false;
 				message = "Не удалось создать копию";
+			}
+		}
+
+	}
+	
+	/**
+	 * Создать конференц-комнату.
+	 * @return
+	 */
+	def createConference() {
+		try {
+			String description = params.description;
+			String phone = params.phone;
+			def conference = new Conference(uuid: UUID.randomUUID(), description: "${description}",
+			phoneNumber: "${phone}")
+			conference.save(failOnError: true, flush: true)
+			render(contentType: "application/json") {
+				result = true;
+				message = "${conference.uuid.toString()}";
+			}
+		} catch (Exception e) {
+			render(contentType: "application/json") {
+				result = false;
+				
+				message = "${e.toString()}";
 			}
 		}
 

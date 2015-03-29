@@ -96,6 +96,9 @@ class UrlMappings {
 		//проверка сигнальной конференции (часто)
 		"/palaver/checkEvent"(controller: "palaver", action: "checkEvent", method: "GET")
 		
+		//создать новую конференц-комнату, возвращает uuid
+		"/conference"(controller: "palaver", action: "createConference", method: "GET")
+		
 		//TODO: удалить. Получить все uuid палаверов
 		"/palaver/uuid"(controller: "palaver", action: "getAllPalaverUuid", method: "GET")
 		
